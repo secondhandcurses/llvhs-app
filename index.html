@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Last Laugh VHS</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <style>
 :root{
   --bg:#1a1818;--bg2:#211f20;--bg3:#2a2728;--bg4:#333031;
@@ -532,21 +533,197 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
     </div>
 
-    <!-- LOTS, LABELS, LOG panels — simplified placeholders, full build in right panel -->
+    <!-- LOT BUILDER PANEL -->
     <div class="tool-panel" id="panel-lots">
-      <div class="panel-body">
-        <div class="empty-state">
-          <div class="empty-icon">⊞</div>
-          <div class="empty-label">Lot builder<br>Use the right panel to search and build lots</div>
+      <div class="panel-head" style="background:var(--bg3);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div class="panel-label">Lot builder</div>
+        <button class="btn btn-ghost" onclick="resetLot()">Clear lot</button>
+      </div>
+      <div class="panel-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;overflow:hidden;padding:0">
+
+        <!-- Left: load + search -->
+        <div style="display:flex;flex-direction:column;gap:0;border-right:1px solid var(--border);overflow-y:auto;padding:12px 14px">
+
+          <!-- Load existing -->
+          <div class="section-label">Load existing lot</div>
+          <div class="field">
+            <input type="text" id="lot-load-search" placeholder="Search saved lots…" oninput="onLotLoadSearch()">
+          </div>
+          <div class="results-list" id="lot-load-results" style="margin-bottom:12px"></div>
+
+          <!-- Name + theme -->
+          <div class="section-label">New lot</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Lot name *</label>
+              <input type="text" id="lot-name" placeholder="e.g. Chuck Norris Collection" oninput="syncLotReview()">
+            </div>
+            <div class="field">
+              <label>Theme</label>
+              <input type="text" id="lot-theme" placeholder="e.g. Actor, Horror" oninput="syncLotReview()">
+            </div>
+          </div>
+
+          <!-- Tape search -->
+          <div class="section-label">Add tapes</div>
+          <div class="field">
+            <input type="text" id="lot-tape-search" placeholder="Search catalogue by title, cast, director…" oninput="onLotTapeSearch()">
+          </div>
+          <div class="search-hint" style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);margin-bottom:6px">Unlisted tapes only · Click to add</div>
+          <div class="results-list" id="lot-tape-results"></div>
+        </div>
+
+        <!-- Right: review + price + save -->
+        <div style="display:flex;flex-direction:column;overflow-y:auto;padding:12px 14px">
+
+          <!-- Stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:10px">
+            <div style="background:var(--bg2);padding:8px 10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px">Tapes</div>
+              <div style="font-family:var(--display);font-size:1.3rem;font-weight:600;color:var(--lavender)" id="lot-stat-count">0</div>
+            </div>
+            <div style="background:var(--bg2);padding:8px 10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px">Total cost</div>
+              <div style="font-family:var(--display);font-size:1.3rem;font-weight:600;color:var(--text)" id="lot-stat-cost">$0.00</div>
+            </div>
+            <div style="background:var(--bg2);padding:8px 10px;text-align:center">
+              <div style="font-family:var(--mono);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px">Status</div>
+              <div style="font-family:var(--display);font-size:0.85rem;font-weight:600;color:var(--muted)" id="lot-stat-status">Unsaved</div>
+            </div>
+          </div>
+
+          <!-- Warning -->
+          <div id="lot-warn" style="display:none;background:var(--yellow-d);border:1px solid var(--yellow-b);padding:6px 10px;font-family:var(--mono);font-size:0.62rem;color:var(--yellow);margin-bottom:8px;line-height:1.5">
+            ⚠ Lots work best with 3 or more tapes
+          </div>
+
+          <!-- Tape list -->
+          <div id="lot-tape-list" style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:10px;max-height:180px;overflow-y:auto">
+            <div style="background:var(--bg2);padding:1rem;text-align:center;font-family:var(--mono);font-size:0.62rem;color:var(--dim)">No tapes added yet</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="field">
+            <label>Lot notes</label>
+            <textarea id="lot-notes" placeholder="Condition details, lot provenance…" style="min-height:52px"></textarea>
+          </div>
+
+          <!-- Price + save -->
+          <div class="field-row" style="align-items:flex-end;margin-bottom:6px">
+            <div class="field" style="margin-bottom:0">
+              <label>Asking price *</label>
+              <div class="price-wrap"><input type="number" id="lot-price" placeholder="0.00" step="0.01" min="0"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+              <button class="btn btn-grape" id="lot-save-btn" onclick="saveLotToAirtable()">Save to Airtable ↗</button>
+              <a id="lot-comps-link" href="#" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:0.58rem;color:var(--lavender);text-decoration:none;opacity:0.8">↗ eBay comps</a>
+            </div>
+          </div>
+          <div class="status-msg" id="lot-save-status"></div>
+
+          <div style="height:1px;background:var(--border);margin:10px 0"></div>
+
+          <!-- Locked gate -->
+          <div id="lot-locked-gate" style="border:1px dashed var(--border2);padding:1.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim)">Save lot to Airtable first</div>
+            <div style="font-family:var(--mono);font-size:0.58rem;color:var(--dim)">to unlock listing generation</div>
+          </div>
+
+          <!-- Generate section (shown after save) -->
+          <div id="lot-gen-section" style="display:none">
+            <button class="btn btn-grape btn-full" id="lot-gen-btn" onclick="generateLotListings()">Generate listings for all platforms</button>
+            <div class="status-msg" id="lot-gen-status" style="margin-bottom:8px"></div>
+
+            <!-- Listing output -->
+            <div id="lot-listing-output" style="margin-top:10px"></div>
+
+            <!-- URL push -->
+            <div id="lot-url-section" style="display:none;margin-top:10px">
+              <div class="section-label">Save listing URLs <span id="lot-url-progress" style="font-family:var(--mono);font-size:0.58rem;color:var(--muted);letter-spacing:0;text-transform:none;margin-left:auto">0 of 4</span></div>
+              <div class="url-rows" id="lot-url-rows"></div>
+            </div>
+
+            <div style="margin-top:8px;text-align:right">
+              <button class="btn btn-ghost" onclick="resetLot()">→ Next lot</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
 
+    <!-- LABEL PRINTER PANEL -->
     <div class="tool-panel" id="panel-labels">
-      <div class="panel-body">
-        <div class="empty-state">
-          <div class="empty-icon">▦</div>
-          <div class="empty-label">Label printer<br>Use the right panel to generate labels</div>
+      <div class="panel-head" style="background:var(--bg3);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div class="panel-label">Label printer</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" id="label-print-btn" onclick="window.print()" style="display:none">Print ↗</button>
+        </div>
+      </div>
+
+      <div style="display:flex;height:100%;overflow:hidden">
+        <!-- Left: controls -->
+        <div style="width:50%;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden">
+
+          <!-- Tab strip -->
+          <div style="display:flex;border-bottom:1px solid var(--border);background:var(--bg3)">
+            <button class="rtab active" onclick="switchLabelTab('tape',this)" style="font-size:0.6rem">Tape labels</button>
+            <button class="rtab" onclick="switchLabelTab('lot',this)" style="font-size:0.6rem">Lot labels</button>
+            <button class="rtab" onclick="switchLabelTab('box',this)" style="font-size:0.6rem">Box labels</button>
+          </div>
+
+          <!-- Tape labels tab -->
+          <div id="label-tab-tape" style="flex:1;overflow-y:auto;padding:12px 14px">
+            <div class="section-label">Search tapes</div>
+            <div class="field">
+              <input type="text" id="label-tape-search" placeholder="Search by title, cast, director…" oninput="onLabelTapeSearch()" onfocus="if(!this.value)onLabelTapeSearch()">
+            </div>
+            <div class="results-list" id="label-tape-results" style="margin-bottom:10px;max-height:160px"></div>
+            <div class="section-label">Queue <span id="label-tape-count" style="font-family:var(--mono);font-size:0.6rem;color:var(--lavender);letter-spacing:0;text-transform:none;margin-left:auto">0</span></div>
+            <div id="label-tape-queue" style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);max-height:140px;overflow-y:auto;margin-bottom:10px">
+              <div style="background:var(--bg2);padding:0.8rem;text-align:center;font-family:var(--mono);font-size:0.6rem;color:var(--dim)">No tapes added</div>
+            </div>
+            <button class="btn btn-grape btn-full" onclick="generateTapeLabels()">Generate tape labels</button>
+          </div>
+
+          <!-- Lot labels tab -->
+          <div id="label-tab-lot" style="flex:1;overflow-y:auto;padding:12px 14px;display:none">
+            <div class="section-label">Search lots</div>
+            <div class="field">
+              <input type="text" id="label-lot-search" placeholder="Search by lot name…" oninput="onLabelLotSearch()" onfocus="if(!this.value)onLabelLotSearch()">
+            </div>
+            <div class="results-list" id="label-lot-results" style="margin-bottom:10px;max-height:160px"></div>
+            <div class="section-label">Queue <span id="label-lot-count" style="font-family:var(--mono);font-size:0.6rem;color:var(--lavender);letter-spacing:0;text-transform:none;margin-left:auto">0</span></div>
+            <div id="label-lot-queue" style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);max-height:140px;overflow-y:auto;margin-bottom:10px">
+              <div style="background:var(--bg2);padding:0.8rem;text-align:center;font-family:var(--mono);font-size:0.6rem;color:var(--dim)">No lots added</div>
+            </div>
+            <button class="btn btn-grape btn-full" onclick="generateLotLabels()">Generate lot labels</button>
+          </div>
+
+          <!-- Box labels tab -->
+          <div id="label-tab-box" style="flex:1;overflow-y:auto;padding:12px 14px;display:none">
+            <div class="section-label">Box setup</div>
+            <div class="field">
+              <label>Box ID *</label>
+              <input type="text" id="label-box-id" placeholder="e.g. 01 → BOX-01" oninput="updateBoxIdPreview()">
+            </div>
+            <div id="label-box-preview" style="font-family:var(--mono);font-size:0.6rem;color:var(--green);margin-bottom:8px;display:none"></div>
+            <button class="btn btn-grape btn-full" id="label-box-load-btn" onclick="loadBoxTapes()" disabled style="margin-bottom:10px">Load tapes in this box</button>
+            <div id="label-box-tape-list" style="display:none;margin-bottom:10px">
+              <div class="section-label">Tapes in box <span id="label-box-count" style="font-family:var(--mono);font-size:0.6rem;color:var(--lavender);letter-spacing:0;text-transform:none;margin-left:auto">0</span></div>
+              <div id="label-box-tapes" style="display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);max-height:180px;overflow-y:auto"></div>
+            </div>
+            <button class="btn btn-grape btn-full" id="label-box-gen-btn" onclick="generateBoxLabel()" style="display:none">Generate box label</button>
+          </div>
+
+        </div>
+
+        <!-- Right: preview -->
+        <div style="width:50%;overflow-y:auto;padding:12px 14px;background:var(--bg)">
+          <div class="section-label">Preview</div>
+          <div id="label-preview">
+            <div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:0.6rem;color:var(--dim)">Generate labels to preview</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1125,7 +1302,7 @@ async function pushToAirtable(){
     'TITLE': currentMovie.title,
     'FORMAT': document.getElementById('f-format').value,
     'CONDITION': condition,
-    'DATE ACQUIRED': new Date().toISOString().slice(0,10),
+    'DATE ACQUIRED': new Date().toLocaleDateString('en-CA'),
   };
   if(currentMovie.year) fields['YEAR'] = parseInt(currentMovie.year);
   if(genreOverride||currentMovie.genre) fields['GENRE'] = genreOverride||currentMovie.genre;
@@ -1495,7 +1672,7 @@ async function saveListing(key){
   const price=priceInput?parseFloat(priceInput.value)||null:null;
   const d=window._genMap&&window._genMap[platform];
 
-  const fields={'PLATFORM':airtablePlatform,'LISTING URL':url,'LISTING STATUS':'ACTIVE','DATE LISTED':new Date().toISOString().slice(0,10)};
+  const fields={'PLATFORM':airtablePlatform,'LISTING URL':url,'LISTING STATUS':'ACTIVE','DATE LISTED':new Date().toLocaleDateString('en-CA')};
   if(d?.title)fields['LISTING TITLE']=d.title;
   if(price!==null)fields['LIST PRICE']=price;
   if(currentMovie?.airtableId)fields['TAPES']=[currentMovie.airtableId];
@@ -1679,7 +1856,7 @@ function exportSessionCSV(){
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download=`llv-session-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  a.href=url;a.download=`llv-session-${new Date().toLocaleDateString('en-CA')}.csv`;a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -1689,8 +1866,639 @@ function clearSessionLog(){
 }
 
 // ─────────────────────────────────────────────
-// HELPERS
+// LOT BUILDER
 // ─────────────────────────────────────────────
+let lotTapes = [];
+let lotAirtableId = null;
+let lotSavedUrls = {};
+let lotGenData = null;
+let lotSearchTimeout = null;
+let lotLoadTimeout = null;
+
+function resetLot(){
+  if((lotTapes.length||lotAirtableId)&&!confirm('Clear current lot?'))return;
+  lotTapes=[];lotAirtableId=null;lotSavedUrls={};lotGenData=null;window._lotGenMap=null;
+  ['lot-name','lot-theme','lot-notes','lot-price'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('lot-stat-count').textContent='0';
+  document.getElementById('lot-stat-cost').textContent='$0.00';
+  document.getElementById('lot-stat-status').textContent='Unsaved';
+  document.getElementById('lot-stat-status').style.color='var(--muted)';
+  document.getElementById('lot-tape-list').innerHTML='<div style="background:var(--bg2);padding:1rem;text-align:center;font-family:var(--mono);font-size:0.62rem;color:var(--dim)">No tapes added yet</div>';
+  document.getElementById('lot-locked-gate').style.display='';
+  document.getElementById('lot-gen-section').style.display='none';
+  document.getElementById('lot-save-btn').disabled=false;
+  document.getElementById('lot-save-btn').textContent='Save to Airtable ↗';
+  document.getElementById('lot-listing-output').innerHTML='';
+  document.getElementById('lot-url-section').style.display='none';
+  document.getElementById('lot-warn').style.display='none';
+  showStatus('lot-save-status','','');
+  showStatus('lot-gen-status','','');
+  document.getElementById('lot-tape-search').value='';
+  document.getElementById('lot-tape-results').innerHTML='';
+  document.getElementById('lot-tape-results').classList.remove('visible');
+}
+
+// Load existing lot search
+function onLotLoadSearch(){
+  clearTimeout(lotLoadTimeout);
+  const q=document.getElementById('lot-load-search').value.trim();
+  lotLoadTimeout=setTimeout(()=>searchExistingLots(q),400);
+}
+
+async function searchExistingLots(q){
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base)return;
+  const el=document.getElementById('lot-load-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)"><span class="spinner">◌</span> Searching…</div>`;
+  el.classList.add('visible');
+  try{
+    const formula=q?encodeURIComponent(`SEARCH(LOWER("${q.replace(/"/g,'\\"')}"),LOWER({LOT NAME}))`):encodeURIComponent(`NOT({LOT NAME}="")`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/LOTS?filterByFormula=${formula}&maxRecords=8&fields[]=LOT+NAME&fields[]=THEME&fields[]=STATUS&fields[]=TAPE+COUNT&fields[]=ASKING+PRICE&fields[]=TAPES&fields[]=NOTES&sort[0][field]=DATE+CREATED&sort[0][direction]=desc`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    if(!data.records?.length){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">No lots found</div>`;return;}
+    window._lotLoadMap={};
+    data.records.forEach(r=>{window._lotLoadMap[r.id]=r;});
+    el.innerHTML=data.records.map(r=>{
+      const f=r.fields;
+      const statusColor=f.STATUS==='ACTIVE'?'var(--green)':f.STATUS==='SOLD'?'var(--muted)':'var(--lavender)';
+      return`<div class="result-item" onclick="loadExistingLot('${r.id}')">
+        <div class="ri-info" style="flex:1">
+          <div class="ri-title">${f['LOT NAME']||'—'}</div>
+          <div class="ri-meta">
+            ${f.THEME?`<span class="ri-chip">${f.THEME}</span>`:''}
+            ${f['TAPE COUNT']!==undefined?`<span class="ri-chip">${f['TAPE COUNT']} tapes</span>`:''}
+            ${f['ASKING PRICE']?`<span class="ri-chip lav">$${parseFloat(f['ASKING PRICE']).toFixed(2)}</span>`:''}
+            <span class="ri-chip" style="border-color:${statusColor};color:${statusColor}">${f.STATUS||'DRAFT'}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:#e88">Error: ${e.message}</div>`;}
+}
+
+async function loadExistingLot(id){
+  const record=window._lotLoadMap&&window._lotLoadMap[id];
+  if(!record)return;
+  if((lotTapes.length||lotAirtableId)&&!confirm('Loading a lot will clear current work. Continue?'))return;
+  const f=record.fields;
+  const token=getCred('at_token'),base=getCred('at_base');
+  lotTapes=[];lotAirtableId=record.id;lotSavedUrls={};lotGenData=null;window._lotGenMap=null;
+  document.getElementById('lot-name').value=f['LOT NAME']||'';
+  document.getElementById('lot-theme').value=f.THEME||'';
+  document.getElementById('lot-price').value=f['ASKING PRICE']||'';
+  document.getElementById('lot-notes').value=f.NOTES||'';
+  updateLotCompsLink();
+  if(f.TAPES?.length&&token&&base){
+    try{
+      const recs=await Promise.all(f.TAPES.map(tid=>fetch(`https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}/${tid}`,{headers:{'Authorization':'Bearer '+token}}).then(r=>r.json())));
+      lotTapes=recs.filter(r=>r&&r.id);
+    }catch(e){console.error('Failed to load lot tapes:',e);}
+  }
+  document.getElementById('lot-load-search').value='';
+  document.getElementById('lot-load-results').classList.remove('visible');
+  document.getElementById('lot-stat-status').textContent='Saved';
+  document.getElementById('lot-stat-status').style.color='var(--green)';
+  document.getElementById('lot-save-btn').textContent='✓ Saved to Airtable';
+  document.getElementById('lot-save-btn').disabled=true;
+  document.getElementById('lot-locked-gate').style.display='none';
+  document.getElementById('lot-gen-section').style.display='';
+  renderLotUrlRows();
+  syncLotReview();
+}
+
+// Tape search for lot
+function onLotTapeSearch(){
+  clearTimeout(lotSearchTimeout);
+  const q=document.getElementById('lot-tape-search').value.trim();
+  lotSearchTimeout=setTimeout(()=>searchLotTapes(q),400);
+}
+
+async function searchLotTapes(q){
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base)return;
+  const el=document.getElementById('lot-tape-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)"><span class="spinner">◌</span> Searching…</div>`;
+  el.classList.add('visible');
+  try{
+    const qSafe=(q||'').replace(/"/g,'\\"');
+    const search=q?`OR(SEARCH(LOWER("${qSafe}"),LOWER({TITLE})),SEARCH(LOWER("${qSafe}"),LOWER({CAST})),SEARCH(LOWER("${qSafe}"),LOWER({DIRECTOR})))`:'1';
+    const formula=encodeURIComponent(`AND(${search},OR({STATUS}="Unlisted",{STATUS}=""))`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}?filterByFormula=${formula}&maxRecords=50&fields[]=TITLE&fields[]=YEAR&fields[]=CONDITION&fields[]=COST+OF+GOODS&fields[]=CAST&fields[]=DIRECTOR&fields[]=GENRE&fields[]=SYNOPSIS&fields[]=NOTES&fields[]=STATUS&fields[]=SPECIAL+FEATURES`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    if(!data.records?.length){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">No unlisted tapes found</div>`;return;}
+    window._lotTapeMap={};
+    data.records.forEach(r=>{window._lotTapeMap[r.id]=r;});
+    const addedIds=new Set(lotTapes.map(t=>t.id));
+    el.innerHTML=data.records.map(r=>{
+      const f=r.fields,isAdded=addedIds.has(r.id);
+      return`<div class="result-item" data-id="${r.id}">
+        <div style="flex:1">
+          <div class="ri-title">${f.TITLE||'—'}</div>
+          <div class="ri-meta">
+            ${f.YEAR?`<span class="ri-chip">${f.YEAR}</span>`:''}
+            ${f.CONDITION?`<span class="ri-chip">${f.CONDITION}</span>`:''}
+            ${f['COST OF GOODS']!==undefined?`<span class="ri-chip lav">$${parseFloat(f['COST OF GOODS']||0).toFixed(2)}</span>`:''}
+          </div>
+        </div>
+        <button class="btn btn-ghost${isAdded?' added':''}" id="lot-ab-${r.id}"
+          onclick="${isAdded?'':  `addTapeToLot('${r.id}')`}"
+          ${isAdded?'disabled':''} style="font-size:0.58rem;padding:3px 8px">
+          ${isAdded?'✓':'+ Add'}
+        </button>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:#e88">Error: ${e.message}</div>`;}
+}
+
+function addTapeToLot(id){
+  if(lotAirtableId){alert('Lot already saved. Load it again to see tapes, or start a new lot.');return;}
+  const r=window._lotTapeMap&&window._lotTapeMap[id];
+  if(!r||lotTapes.find(t=>t.id===id))return;
+  lotTapes.push(r);
+  const btn=document.getElementById('lot-ab-'+id);
+  if(btn){btn.textContent='✓';btn.classList.add('added');btn.disabled=true;btn.onclick=null;}
+  syncLotReview();
+}
+
+function removeTapeFromLot(id){
+  if(lotAirtableId){alert('Lot already saved to Airtable.');return;}
+  lotTapes=lotTapes.filter(t=>t.id!==id);
+  const btn=document.getElementById('lot-ab-'+id);
+  if(btn){btn.textContent='+ Add';btn.classList.remove('added');btn.disabled=false;btn.onclick=()=>addTapeToLot(id);}
+  syncLotReview();
+}
+
+function syncLotReview(){
+  const totalCost=lotTapes.reduce((s,t)=>s+(parseFloat(t.fields['COST OF GOODS'])||0),0);
+  document.getElementById('lot-stat-count').textContent=lotTapes.length;
+  document.getElementById('lot-stat-cost').textContent='$'+totalCost.toFixed(2);
+  document.getElementById('lot-warn').style.display=lotTapes.length>0&&lotTapes.length<3?'':'none';
+  updateLotCompsLink();
+  const list=document.getElementById('lot-tape-list');
+  if(!lotTapes.length){
+    list.innerHTML='<div style="background:var(--bg2);padding:1rem;text-align:center;font-family:var(--mono);font-size:0.62rem;color:var(--dim)">No tapes added yet</div>';
+    return;
+  }
+  list.innerHTML=lotTapes.map((t,i)=>{
+    const f=t.fields,cost=parseFloat(f['COST OF GOODS'])||0;
+    return`<div style="background:var(--bg2);padding:6px 9px;display:flex;align-items:center;gap:8px">
+      <div style="width:18px;height:18px;border-radius:50%;background:var(--grape-d);border:1px solid var(--grape-b);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.5rem;color:var(--lavender);flex-shrink:0">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-family:var(--display);font-size:0.82rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text)">${f.TITLE||'—'}</div>
+        <div style="font-family:var(--mono);font-size:0.56rem;color:var(--muted)">${[f.YEAR,f.CONDITION].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);flex-shrink:0">$${cost.toFixed(2)}</div>
+      ${!lotAirtableId?`<button onclick="removeTapeFromLot('${t.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:0.65rem;padding:2px 4px;opacity:0.6" title="Remove">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function updateLotCompsLink(){
+  const name=document.getElementById('lot-name')?.value.trim()||'';
+  const url=`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent((name+' VHS lot').trim())}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  document.getElementById('lot-comps-link').href=url;
+}
+
+async function saveLotToAirtable(){
+  const name=document.getElementById('lot-name').value.trim();
+  const theme=document.getElementById('lot-theme').value.trim();
+  const price=parseFloat(document.getElementById('lot-price').value)||null;
+  const notes=document.getElementById('lot-notes').value.trim();
+  if(!name){alert('Please enter a lot name.');return;}
+  if(!lotTapes.length){alert('Please add at least one tape.');return;}
+  if(!price){alert('Please enter an asking price.');return;}
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base){alert('Please add your Airtable credentials in Settings.');toggleSettings();return;}
+  const btn=document.getElementById('lot-save-btn');
+  btn.disabled=true;btn.textContent='⏳ Saving…';
+  showStatus('lot-save-status','Creating lot record…','working');
+  const fields={'LOT NAME':name,'STATUS':'DRAFT','DATE CREATED':new Date().toLocaleDateString('en-CA'),'ASKING PRICE':price};
+  if(theme)fields['THEME']=theme;
+  if(notes)fields['NOTES']=notes;
+  if(lotTapes.length)fields['TAPES']=lotTapes.map(t=>t.id);
+  try{
+    const res=await fetch(`https://api.airtable.com/v0/${base.trim()}/LOTS`,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({fields})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||`Error ${res.status}`);
+    lotAirtableId=data.id;
+    document.getElementById('lot-stat-status').textContent='Saved';
+    document.getElementById('lot-stat-status').style.color='var(--green)';
+    document.getElementById('lot-locked-gate').style.display='none';
+    document.getElementById('lot-gen-section').style.display='';
+    btn.textContent='✓ Saved to Airtable';
+    showStatus('lot-save-status',`✓ Saved — ${data.id}`,'success');
+    syncLotReview();
+    renderLotUrlRows();
+  }catch(e){
+    showStatus('lot-save-status',`✗ Failed: ${e.message}`,'error');
+    btn.disabled=false;btn.textContent='Save to Airtable ↗';
+  }
+}
+
+async function generateLotListings(){
+  const claudeKey=getCred('claude');
+  if(!claudeKey){alert('Please add your Claude API key in Settings.');toggleSettings();return;}
+  const name=document.getElementById('lot-name').value.trim();
+  const theme=document.getElementById('lot-theme').value.trim();
+  const notes=document.getElementById('lot-notes').value.trim();
+  const price=document.getElementById('lot-price').value;
+  const btn=document.getElementById('lot-gen-btn');
+  btn.disabled=true;btn.textContent='⏳ Generating…';
+  showStatus('lot-gen-status','Crafting listings…','working');
+  const tapeList=lotTapes.map(t=>{
+    const f=t.fields;
+    const specials=Array.isArray(f['SPECIAL FEATURES'])?f['SPECIAL FEATURES'].join(', '):'';
+    return`• ${f.TITLE}${f.YEAR?` (${f.YEAR})`:''} — ${f.CONDITION||''}${specials?` [${specials}]`:''}`;
+  }).join('\n');
+  const lotInfo=[
+    `Lot name: ${name}`,theme?`Theme: ${theme}`:'',
+    `Tapes (${lotTapes.length}):\n${tapeList}`,
+    price?`Asking price: $${price}`:'',notes?`Notes: ${notes}`:'',
+  ].filter(Boolean).join('\n');
+  const guide={
+    'eBay':'eBay: title max 80 chars, keyword-dense. Include lot, VHS, theme. MUST include 8-12 keywords[].',
+    'Etsy':'Etsy: title up to 140 chars, nostalgia-driven. MUST include exactly 13 keywords[].',
+    'Facebook Marketplace':'Facebook: title under 60 chars, casual. MUST include 8-10 keywords[].',
+    'Mercari':'Mercari: title max 40 chars, brief. MUST include 8-10 keywords[].'
+  };
+  const prompt=`Generate VHS lot listings for ALL four platforms:\n\n${lotInfo}\n\nGuidelines:\n${Object.entries(guide).map(([p,g])=>`${p}: ${g}`).join('\n')}\n\nReturn JSON: {"eBay":{title,description,keywords[]},"Etsy":{...},"Facebook Marketplace":{...},"Mercari":{...}}. JSON only.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2200,system:'You are an expert VHS reseller specialising in lot bundles. Return valid JSON only, no markdown.',messages:[{role:'user',content:prompt}]})});
+    if(!resp.ok)throw new Error(`API error ${resp.status}`);
+    const d=await resp.json();
+    const raw=d.content.map(c=>c.text||'').join('').replace(/^```json\n?/,'').replace(/^```\n?/,'').replace(/\n?```$/,'').trim();
+    window._lotGenMap=JSON.parse(raw);
+    renderLotListingOutput();
+    showStatus('lot-gen-status','','');
+    document.getElementById('lot-gen-status').className='status-msg';
+  }catch(e){showStatus('lot-gen-status',`Error: ${e.message}`,'error');}
+  finally{btn.disabled=false;btn.textContent='↺ Regenerate listings';}
+}
+
+function renderLotListingOutput(){
+  const container=document.getElementById('lot-listing-output');
+  const tabs=PLATFORMS.map((p,i)=>`<button class="ptab${i===0?' active':''}" onclick="switchLotListingTab('${p.replace(/\s+/g,'_')}',this)">${p==='Facebook Marketplace'?'Facebook':p}</button>`).join('');
+  const sections=PLATFORMS.map((p,i)=>{
+    const key=p.replace(/\s+/g,'_');
+    const d=window._lotGenMap[p];
+    if(!d)return`<div id="llrs-${key}" style="${i>0?'display:none':''}">${esc('No data')}</div>`;
+    const kws=(d.keywords||[]).map(k=>`<span class="kw">${esc(k)}</span>`).join('');
+    return`<div id="llrs-${key}" style="${i>0?'display:none':''}">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+        <button class="copy-inline-btn" id="lca-${key}" onclick="copyLotAll('${p}','lca-${key}')">Copy all</button>
+      </div>
+      <div class="result-block">
+        <div class="result-label">Title <button class="copy-inline-btn" id="lct-${key}" onclick="copyLotField('${p}','title','lct-${key}')">Copy</button></div>
+        <div class="result-text title-field">${esc(d.title||'')}</div>
+        ${d.title?`<div class="char-count ${d.title.length>80?'warn':''}">${d.title.length} chars</div>`:''}
+      </div>
+      <div class="result-block">
+        <div class="result-label">Description <button class="copy-inline-btn" id="lcd-${key}" onclick="copyLotField('${p}','description','lcd-${key}')">Copy</button></div>
+        <div class="result-text">${esc(d.description||'')}</div>
+      </div>
+      ${kws?`<div class="result-block"><div class="result-label">Keywords <button class="copy-inline-btn" id="lck-${key}" onclick="copyLotField('${p}','keywords','lck-${key}')">Copy all</button></div><div class="kw-wrap">${kws}</div></div>`:''}
+    </div>`;
+  }).join('');
+  container.innerHTML=`<div class="plat-tabs" style="margin-bottom:8px">${tabs}</div>${sections}`;
+  document.getElementById('lot-url-section').style.display='';
+  updateLotUrlProgress();
+}
+
+function switchLotListingTab(key,btn){
+  document.querySelectorAll('#lot-listing-output [id^="llrs-"]').forEach(s=>s.style.display='none');
+  document.querySelectorAll('#lot-listing-output .ptab').forEach(b=>b.classList.remove('active'));
+  const sec=document.getElementById('llrs-'+key);
+  if(sec)sec.style.display='';
+  btn.classList.add('active');
+}
+
+function copyLotField(platform,field,btnId){
+  const d=window._lotGenMap&&window._lotGenMap[platform];if(!d)return;
+  let text='';
+  if(field==='title')text=d.title||'';
+  else if(field==='description')text=d.description||'';
+  else if(field==='keywords')text=(d.keywords||[]).join(', ');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById(btnId);if(!btn)return;
+    const orig=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+  });
+}
+
+function copyLotAll(platform,btnId){
+  const d=window._lotGenMap&&window._lotGenMap[platform];if(!d)return;
+  const text=[d.title||'','\n\n',d.description||'',d.keywords?.length?'\n\nKeywords: '+d.keywords.join(', '):''  ].join('');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById(btnId);if(!btn)return;
+    const orig=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+  });
+}
+
+function renderLotUrlRows(){
+  const container=document.getElementById('lot-url-rows');
+  container.innerHTML=PLATFORMS.map(p=>{
+    const key=p.replace(/\s+/g,'_');
+    return`<div class="url-row" id="lur-${key}">
+      <div class="plat-icon" style="background:${PLAT_COLORS[p]}">${PLAT_SHORT[p]}</div>
+      <div class="url-plat-name">${p==='Facebook Marketplace'?'Facebook':p}</div>
+      <input class="url-input" type="text" id="lui-${key}" placeholder="Paste URL…" oninput="onLotUrlInput('${key}')">
+      <input class="url-price" type="number" id="lup-${key}" placeholder="Price" step="0.01" min="0">
+      <div id="lua-${key}"><span class="pending-icon">○</span></div>
+    </div>`;
+  }).join('');
+}
+
+function onLotUrlInput(key){
+  const input=document.getElementById('lui-'+key);
+  const actionEl=document.getElementById('lua-'+key);
+  if(!input||!actionEl||lotSavedUrls[key])return;
+  if(input.value.trim()){input.classList.add('has-val');actionEl.innerHTML=`<button class="save-url-btn" onclick="saveLotUrl('${key}')">Save ↗</button>`;}
+  else{input.classList.remove('has-val');actionEl.innerHTML=`<span class="pending-icon">○</span>`;}
+}
+
+async function saveLotUrl(key){
+  const token=getCred('at_token'),base=getCred('at_base');
+  const input=document.getElementById('lui-'+key),actionEl=document.getElementById('lua-'+key);
+  if(!input||!token||!base||!lotAirtableId)return;
+  const url=input.value.trim();if(!url)return;
+  const btn=actionEl.querySelector('button');if(btn){btn.disabled=true;btn.textContent='…';}
+  const platform=PLATFORMS.find(p=>p.replace(/\s+/g,'_')===key)||key;
+  const airtablePlatform=PLAT_AT[platform]||platform.toUpperCase();
+  const price=parseFloat(document.getElementById('lup-'+key)?.value)||null;
+  const d=window._lotGenMap&&window._lotGenMap[platform];
+  const fields={'PLATFORM':airtablePlatform,'LISTING URL':url,'LISTING STATUS':'ACTIVE','DATE LISTED':new Date().toLocaleDateString('en-CA')};
+  if(d?.title)fields['LISTING TITLE']=d.title;
+  if(price!==null)fields['LIST PRICE']=price;
+  if(lotAirtableId)fields['LOT']=[lotAirtableId];
+  try{
+    const res=await fetch(`https://api.airtable.com/v0/${base.trim()}/LISTINGS`,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({fields})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||`Error ${res.status}`);
+    lotSavedUrls[key]={url,price,id:data.id};
+    input.classList.remove('has-val');input.classList.add('saved-val');input.readOnly=true;
+    const priceInput=document.getElementById('lup-'+key);
+    if(priceInput){priceInput.readOnly=true;priceInput.style.color='var(--muted)';}
+    actionEl.innerHTML=`<span class="check-icon">✓</span>`;
+    document.getElementById('lur-'+key)?.classList.add('saved-row');
+    updateLotUrlProgress();
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='Save ↗';}alert('Failed: '+e.message);}
+}
+
+function updateLotUrlProgress(){
+  const saved=Object.keys(lotSavedUrls).length;
+  document.getElementById('lot-url-progress').textContent=`${saved} of 4`;
+}
+
+// ─────────────────────────────────────────────
+// LABEL PRINTER
+// ─────────────────────────────────────────────
+let labelTapeQueue=[];
+let labelLotQueue=[];
+let labelBoxTapes=[];
+let labelTapeSearchTimeout=null;
+let labelLotSearchTimeout=null;
+
+function switchLabelTab(name,btn){
+  ['tape','lot','box'].forEach(t=>{
+    document.getElementById('label-tab-'+t).style.display=t===name?'':'none';
+  });
+  document.querySelectorAll('#panel-labels .rtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Tape search for labels
+function onLabelTapeSearch(){
+  clearTimeout(labelTapeSearchTimeout);
+  const q=document.getElementById('label-tape-search').value.trim();
+  labelTapeSearchTimeout=setTimeout(()=>searchLabelTapes(q),400);
+}
+
+async function searchLabelTapes(q){
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base)return;
+  const el=document.getElementById('label-tape-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)"><span class="spinner">◌</span></div>`;
+  el.classList.add('visible');
+  try{
+    const qSafe=(q||'').replace(/"/g,'\\"');
+    const search=q?`OR(SEARCH(LOWER("${qSafe}"),LOWER({TITLE})),SEARCH(LOWER("${qSafe}"),LOWER({CAST})),SEARCH(LOWER("${qSafe}"),LOWER({DIRECTOR})))`:'1';
+    const formula=encodeURIComponent(`AND(${search})`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}?filterByFormula=${formula}&maxRecords=50&fields[]=TITLE&fields[]=YEAR&fields[]=CONDITION&fields[]=STORAGE+LOCATION`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    if(!data.records?.length){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">No tapes found</div>`;return;}
+    window._labelTapeMap={};data.records.forEach(r=>{window._labelTapeMap[r.id]=r;});
+    const addedIds=new Set(labelTapeQueue.map(t=>t.id));
+    el.innerHTML=data.records.map(r=>{
+      const f=r.fields,isAdded=addedIds.has(r.id);
+      return`<div class="result-item">
+        <div style="flex:1"><div class="ri-title">${f.TITLE||'—'}</div><div class="ri-meta">${f.YEAR?`<span class="ri-chip">${f.YEAR}</span>`:''}${f.CONDITION?`<span class="ri-chip">${f.CONDITION}</span>`:''}${f['STORAGE LOCATION']?`<span class="ri-chip">${f['STORAGE LOCATION']}</span>`:''}</div></div>
+        <button class="btn btn-ghost${isAdded?' added':''}" id="ltab-${r.id}" onclick="${isAdded?'':  `addToLabelQueue('tape','${r.id}')`}" ${isAdded?'disabled':''} style="font-size:0.58rem;padding:3px 8px">${isAdded?'✓':'+ Add'}</button>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:#e88">Error: ${e.message}</div>`;}
+}
+
+// Lot search for labels
+function onLabelLotSearch(){
+  clearTimeout(labelLotSearchTimeout);
+  const q=document.getElementById('label-lot-search').value.trim();
+  labelLotSearchTimeout=setTimeout(()=>searchLabelLots(q),400);
+}
+
+async function searchLabelLots(q){
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base)return;
+  const el=document.getElementById('label-lot-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)"><span class="spinner">◌</span></div>`;
+  el.classList.add('visible');
+  try{
+    const formula=q?encodeURIComponent(`SEARCH(LOWER("${q.replace(/"/g,'\\"')}"),LOWER({LOT NAME}))`):encodeURIComponent(`NOT({LOT NAME}="")`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/LOTS?filterByFormula=${formula}&maxRecords=30&fields[]=LOT+NAME&fields[]=THEME&fields[]=TAPE+COUNT&fields[]=STATUS`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    if(!data.records?.length){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">No lots found</div>`;return;}
+    window._labelLotMap={};data.records.forEach(r=>{window._labelLotMap[r.id]=r;});
+    const addedIds=new Set(labelLotQueue.map(t=>t.id));
+    el.innerHTML=data.records.map(r=>{
+      const f=r.fields,isAdded=addedIds.has(r.id);
+      return`<div class="result-item">
+        <div style="flex:1"><div class="ri-title">${f['LOT NAME']||'—'}</div><div class="ri-meta">${f.THEME?`<span class="ri-chip">${f.THEME}</span>`:''}${f['TAPE COUNT']!==undefined?`<span class="ri-chip">${f['TAPE COUNT']} tapes</span>`:''}</div></div>
+        <button class="btn btn-ghost${isAdded?' added':''}" id="llib-${r.id}" onclick="${isAdded?'':  `addToLabelQueue('lot','${r.id}')`}" ${isAdded?'disabled':''} style="font-size:0.58rem;padding:3px 8px">${isAdded?'✓':'+ Add'}</button>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:#e88">Error: ${e.message}</div>`;}
+}
+
+function addToLabelQueue(type,id){
+  const map=type==='tape'?window._labelTapeMap:window._labelLotMap;
+  const r=map&&map[id];if(!r)return;
+  if(type==='tape'){if(labelTapeQueue.find(t=>t.id===id))return;labelTapeQueue.push(r);}
+  else{if(labelLotQueue.find(t=>t.id===id))return;labelLotQueue.push(r);}
+  const btn=document.getElementById((type==='tape'?'ltab':'llib')+'-'+id);
+  if(btn){btn.textContent='✓';btn.classList.add('added');btn.disabled=true;btn.onclick=null;}
+  renderLabelQueue(type);
+}
+
+function renderLabelQueue(type){
+  const queue=type==='tape'?labelTapeQueue:labelLotQueue;
+  const countEl=document.getElementById('label-'+(type==='tape'?'tape':'lot')+'-count');
+  if(countEl)countEl.textContent=queue.length;
+  const el=document.getElementById('label-'+(type==='tape'?'tape':'lot')+'-queue');
+  if(!queue.length){el.innerHTML=`<div style="background:var(--bg2);padding:0.8rem;text-align:center;font-family:var(--mono);font-size:0.6rem;color:var(--dim)">No ${type}s added</div>`;return;}
+  el.innerHTML=queue.map((r,i)=>{
+    const title=type==='tape'?r.fields.TITLE:r.fields['LOT NAME'];
+    const meta=type==='tape'?[r.fields.YEAR,r.fields.CONDITION].filter(Boolean).join(' · '):`${r.fields['TAPE COUNT']||'?'} tapes`;
+    return`<div style="background:var(--bg2);padding:5px 9px;display:flex;align-items:center;gap:6px">
+      <div style="flex:1"><div style="font-family:var(--display);font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text)">${title||'—'}</div><div style="font-family:var(--mono);font-size:0.54rem;color:var(--muted)">${meta}</div></div>
+      <button onclick="removeFromLabelQueue('${type}','${r.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:0.6rem;opacity:0.6">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeFromLabelQueue(type,id){
+  if(type==='tape')labelTapeQueue=labelTapeQueue.filter(t=>t.id!==id);
+  else labelLotQueue=labelLotQueue.filter(t=>t.id!==id);
+  const btn=document.getElementById((type==='tape'?'ltab':'llib')+'-'+id);
+  if(btn){btn.textContent='+ Add';btn.classList.remove('added');btn.disabled=false;btn.onclick=()=>addToLabelQueue(type,id);}
+  renderLabelQueue(type);
+}
+
+// Box
+function updateBoxIdPreview(){
+  const val=document.getElementById('label-box-id').value.trim().toUpperCase();
+  const preview=document.getElementById('label-box-preview');
+  const btn=document.getElementById('label-box-load-btn');
+  if(val.length>=1){preview.textContent=`Barcode: LLV-BOX-${val}`;preview.style.display='';btn.disabled=false;}
+  else{preview.style.display='none';btn.disabled=true;}
+}
+
+async function loadBoxTapes(){
+  const rawId=document.getElementById('label-box-id').value.trim().toUpperCase();
+  if(!rawId)return;
+  const token=getCred('at_token'),base=getCred('at_base');
+  if(!token||!base){alert('Please add your Airtable credentials in Settings.');return;}
+  const btn=document.getElementById('label-box-load-btn');
+  btn.disabled=true;btn.textContent='Loading…';
+  try{
+    const formula=encodeURIComponent(`{STORAGE LOCATION}="BOX-${rawId}"`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}?filterByFormula=${formula}&maxRecords=100&fields[]=TITLE&fields[]=YEAR&fields[]=CONDITION&fields[]=STATUS`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    labelBoxTapes=data.records||[];
+    document.getElementById('label-box-count').textContent=labelBoxTapes.length;
+    document.getElementById('label-box-tape-list').style.display='';
+    document.getElementById('label-box-gen-btn').style.display='';
+    const listEl=document.getElementById('label-box-tapes');
+    if(!labelBoxTapes.length){listEl.innerHTML='<div style="padding:0.8rem;text-align:center;font-family:var(--mono);font-size:0.6rem;color:var(--dim)">No tapes found with this storage location</div>';return;}
+    listEl.innerHTML=labelBoxTapes.map((r,i)=>{
+      const f=r.fields;
+      return`<div style="background:var(--bg2);padding:5px 9px;display:flex;align-items:center;gap:6px">
+        <div style="font-family:var(--mono);font-size:0.52rem;color:var(--dim);width:16px;flex-shrink:0">${i+1}</div>
+        <div style="flex:1"><div style="font-family:var(--display);font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text)">${f.TITLE||'—'}</div><div style="font-family:var(--mono);font-size:0.52rem;color:var(--muted)">${[f.YEAR,f.CONDITION].filter(Boolean).join(' · ')}</div></div>
+      </div>`;
+    }).join('');
+  }catch(e){alert('Failed: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Load tapes in this box';}
+}
+
+// Label generation (DOM-based, no JsBarcode CDN issue workaround)
+function generateTapeLabels(){
+  if(!labelTapeQueue.length){alert('Add at least one tape to the queue.');return;}
+  const preview=document.getElementById('label-preview');
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px';
+  labelTapeQueue.forEach(r=>{
+    const f=r.fields;
+    const val='LLV-T-'+r.id;
+    grid.appendChild(makeLabelCard(val,'TAPE',f.TITLE||'Unknown',[f.YEAR,f.CONDITION].filter(Boolean).join(' · ')));
+  });
+  preview.innerHTML='';preview.appendChild(grid);
+  document.getElementById('label-print-btn').style.display='';
+}
+
+function generateLotLabels(){
+  if(!labelLotQueue.length){alert('Add at least one lot to the queue.');return;}
+  const preview=document.getElementById('label-preview');
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px';
+  labelLotQueue.forEach(r=>{
+    const f=r.fields;
+    const val='LLV-L-'+r.id;
+    grid.appendChild(makeLabelCard(val,'LOT',f['LOT NAME']||'Unknown',`${f['TAPE COUNT']||'?'} tapes · ${f.THEME||''}`.trim()));
+  });
+  preview.innerHTML='';preview.appendChild(grid);
+  document.getElementById('label-print-btn').style.display='';
+}
+
+function generateBoxLabel(){
+  const rawId=document.getElementById('label-box-id').value.trim().toUpperCase();
+  const val=`LLV-BOX-${rawId}`;
+  const preview=document.getElementById('label-preview');
+  const wrapper=document.createElement('div');
+  wrapper.style.cssText='display:flex;flex-direction:column;gap:8px;padding:4px;max-width:260px';
+  const card=makeLabelCard(val,'BOX',`BOX-${rawId}`,`${labelBoxTapes.length} tape${labelBoxTapes.length!==1?'s':''}`);
+  card.style.width='100%';
+  // Add manifest
+  if(labelBoxTapes.length){
+    const manifest=document.createElement('div');
+    manifest.style.cssText='margin-top:5px;border-top:0.5pt solid #ccc;padding-top:4px';
+    labelBoxTapes.slice(0,14).forEach(r=>{
+      const line=document.createElement('div');
+      line.style.cssText='font-family:monospace;font-size:6px;color:#444;padding:1px 0;border-bottom:0.3pt solid #eee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      line.textContent=`• ${r.fields.TITLE||'—'}`;
+      manifest.appendChild(line);
+    });
+    if(labelBoxTapes.length>14){const more=document.createElement('div');more.style.cssText='font-family:monospace;font-size:6px;color:#999;padding:1px 0';more.textContent=`+ ${labelBoxTapes.length-14} more`;manifest.appendChild(more);}
+    card.appendChild(manifest);
+  }
+  wrapper.appendChild(card);
+  preview.innerHTML='';preview.appendChild(wrapper);
+  document.getElementById('label-print-btn').style.display='';
+}
+
+function makeLabelCard(barcodeValue,type,title,sub){
+  const card=document.createElement('div');
+  card.style.cssText='background:#fff;border:1px solid #ccc;padding:8px;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;min-height:90px';
+  const badge=document.createElement('div');
+  badge.style.cssText='position:absolute;top:3px;left:4px;font-family:monospace;font-size:6px;letter-spacing:0.08em;text-transform:uppercase;padding:1px 4px;background:'+({'TAPE':'#f0e8ff','LOT':'#e8d8ff','BOX':'#e0f0e0'}[type]||'#eee')+';color:'+({'TAPE':'#654597','LOT':'#4a2a7a','BOX':'#2a6a2a'}[type]||'#333');
+  badge.textContent=type;card.appendChild(badge);
+  const brand=document.createElement('div');
+  brand.style.cssText='position:absolute;bottom:3px;right:4px;font-family:monospace;font-size:5px;color:#bbb;letter-spacing:0.1em;text-transform:uppercase';
+  brand.textContent='LLV';card.appendChild(brand);
+  // Real Code128 barcode via JsBarcode
+  const barcodeWrap=document.createElement('div');
+  barcodeWrap.style.cssText='width:100%;margin-top:14px';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  barcodeWrap.appendChild(svg);card.appendChild(barcodeWrap);
+  const idEl=document.createElement('div');
+  idEl.style.cssText='font-family:monospace;font-size:6px;color:#333;letter-spacing:0.04em;text-align:center';
+  idEl.textContent=barcodeValue;card.appendChild(idEl);
+  const titleEl=document.createElement('div');
+  titleEl.style.cssText='font-family:sans-serif;font-size:8px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#111;text-align:center;line-height:1.2;max-width:100%;word-break:break-word;margin-top:2px';
+  titleEl.textContent=title;card.appendChild(titleEl);
+  if(sub){const subEl=document.createElement('div');subEl.style.cssText='font-family:monospace;font-size:6px;color:#888;text-align:center';subEl.textContent=sub;card.appendChild(subEl);}
+  // Render barcode after element is in DOM
+  requestAnimationFrame(()=>{
+    try{
+      JsBarcode(svg,barcodeValue,{format:'CODE128',width:1.2,height:32,displayValue:false,margin:2,background:'transparent',lineColor:'#111'});
+    }catch(e){console.error('Barcode error:',barcodeValue,e);}
+  });
+  return card;
+}
+
+// Print styles for labels
+const labelPrintStyle=document.createElement('style');
+labelPrintStyle.textContent=`@media print{body *{visibility:hidden}#label-preview,#label-preview *{visibility:visible}#label-preview{position:fixed;inset:0;padding:10mm;background:#fff}}`;
+document.head.appendChild(labelPrintStyle);
 function showStatus(id,msg,state){
   const el=document.getElementById(id);
   if(!el)return;

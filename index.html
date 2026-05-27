@@ -2415,7 +2415,7 @@ function generateTapeLabels(){
   if(!labelTapeQueue.length){alert('Add at least one tape to the queue.');return;}
   const preview=document.getElementById('label-preview');
   const grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px';
+  grid.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:4px';
   labelTapeQueue.forEach(r=>{
     const f=r.fields;
     const val='LLV-T-'+r.id;
@@ -2429,7 +2429,7 @@ function generateLotLabels(){
   if(!labelLotQueue.length){alert('Add at least one lot to the queue.');return;}
   const preview=document.getElementById('label-preview');
   const grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px';
+  grid.style.cssText='display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:4px';
   labelLotQueue.forEach(r=>{
     const f=r.fields;
     const val='LLV-L-'+r.id;
@@ -2497,7 +2497,7 @@ function makeLabelCard(barcodeValue,type,title,sub){
 
 // Print styles for labels
 const labelPrintStyle=document.createElement('style');
-labelPrintStyle.textContent=`@media print{body *{visibility:hidden}#label-preview,#label-preview *{visibility:visible}#label-preview{position:fixed;inset:0;padding:10mm;background:#fff}}`;
+labelPrintStyle.textContent=`@media print{body *{visibility:hidden}#label-preview,#label-preview *{visibility:visible}#label-preview{position:fixed;inset:0;padding:12mm;background:#fff}#label-preview>div{display:grid;grid-template-columns:repeat(2,1fr);gap:8mm}}`;
 document.head.appendChild(labelPrintStyle);
 function showStatus(id,msg,state){
   const el=document.getElementById(id);

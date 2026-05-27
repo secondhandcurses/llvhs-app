@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Last Laugh VHS</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1818;--bg2:#211f20;--bg3:#2a2728;--bg4:#333031;
+  --border:#3a3638;--border2:#4a464a;
+  --text:#BDBBB0;--muted:#8A897C;--dim:#5a5858;
+  --grape:#654597;--grape-d:rgba(101,69,151,0.15);--grape-b:rgba(101,69,151,0.4);
+  --lavender:#AB81CD;--lavender-d:rgba(171,129,205,0.12);--lavender-b:rgba(171,129,205,0.35);
+  --mauve:#E2ADF2;
+  --green:#7aab6e;--green-d:rgba(122,171,110,0.1);--green-b:rgba(122,171,110,0.3);
+  --yellow:#d4a843;--yellow-d:rgba(212,168,67,0.1);--yellow-b:rgba(212,168,67,0.35);
+  --red:#c45858;--red-d:rgba(196,88,88,0.1);
+  --mono:'DM Mono',monospace;--display:'Oswald',sans-serif;--body:'Barlow',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13px;line-height:1.5;display:flex;flex-direction:column}
+
+/* ── Grain overlay ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.5}
+
+/* ── Top bar ── */
+.topbar{position:relative;z-index:10;height:44px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 16px;flex-shrink:0}
+.brand{font-family:var(--display);font-size:1rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);line-height:1;white-space:nowrap}
+.brand em{font-style:normal;color:var(--lavender)}
+.topbar-div{width:1px;height:18px;background:var(--border);flex-shrink:0}
+
+/* Scan bar */
+.scan-bar{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);padding:5px 10px;cursor:text;transition:border-color 0.15s;max-width:480px}
+.scan-bar:focus-within{border-color:var(--grape)}
+.scan-ready-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0;animation:pulse 2.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.scan-input{flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:0.75rem;color:var(--text);letter-spacing:0.02em}
+.scan-input::placeholder{color:var(--dim);font-family:var(--body);font-size:0.78rem;font-weight:300;letter-spacing:0}
+
+/* Cred status */
+.cred-status-row{display:flex;align-items:center;gap:6px;margin-left:auto}
+.cred-dot{width:5px;height:5px;border-radius:50%;background:var(--red)}
+.cred-dot.ok{background:var(--green);box-shadow:0 0 4px var(--green)}
+.cred-label{font-family:var(--mono);font-size:0.52rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.settings-btn{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);background:none;border:1px solid var(--border);padding:3px 8px;cursor:pointer;transition:all 0.15s}
+.settings-btn:hover{border-color:var(--border2);color:var(--text)}
+
+/* ── App layout ── */
+.app-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:48px 1fr 1fr;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow:hidden}
+.nav-item{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background 0.12s;font-size:1.05rem;color:var(--muted)}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--grape-d);color:var(--lavender)}
+.nav-item .pip{width:4px;height:4px;border-radius:50%;background:var(--grape);position:absolute;top:5px;right:5px}
+.nav-tooltip{position:absolute;left:42px;top:50%;transform:translateY(-50%);background:var(--bg3);border:1px solid var(--border2);padding:3px 8px;font-family:var(--mono);font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);white-space:nowrap;pointer-events:none;z-index:100;display:none}
+.nav-item:hover .nav-tooltip{display:block}
+.nav-divider{width:24px;height:1px;background:var(--border);margin:3px 0;flex-shrink:0}
+
+/* ── Center panel ── */
+.center{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-head{background:var(--bg3);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+.panel-label{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted)}
+.pipeline{display:flex;align-items:center;gap:0}
+.pip-step{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;color:var(--dim);cursor:default}
+.pip-step.done{color:var(--grape);background:var(--grape-d)}
+.pip-step.active{color:#fff;background:var(--grape)}
+.pip-arrow{font-size:0.55rem;color:var(--border2)}
+.panel-body{flex:1;overflow-y:auto;padding:14px}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* ── Right panel ── */
+.right{display:flex;flex-direction:column;overflow:hidden;background:var(--bg2)}
+.right-tabs{display:flex;background:var(--bg3);border-bottom:1px solid var(--border);padding:0 10px;flex-shrink:0}
+.rtab{font-family:var(--mono);font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;padding:7px 10px;border:none;border-bottom:1.5px solid transparent;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:color 0.12s}
+.rtab:hover{color:var(--text)}
+.rtab.active{color:var(--lavender);border-bottom-color:var(--lavender);background:var(--bg2)}
+.right-body{flex:1;overflow-y:auto;padding:14px}
+.right-body::-webkit-scrollbar{width:3px}
+.right-body::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* Tool panels */
+.tool-panel{display:none;flex-direction:column;height:100%}
+.tool-panel.active{display:flex}
+
+/* ── Settings drawer ── */
+.settings-drawer{position:fixed;top:0;right:0;bottom:0;width:340px;background:var(--bg2);border-left:1px solid var(--border);z-index:200;transform:translateX(100%);transition:transform 0.2s ease;display:flex;flex-direction:column}
+.settings-drawer.open{transform:translateX(0)}
+.settings-head{background:var(--bg3);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.settings-head-title{font-family:var(--display);font-size:0.9rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.settings-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 6px}
+.settings-close:hover{color:var(--text)}
+.settings-body{flex:1;overflow-y:auto;padding:16px}
+.settings-section{margin-bottom:1.5rem}
+.settings-section-title{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.sfield{margin-bottom:10px}
+.sfield label{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.sfield input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.72rem;padding:6px 9px;outline:none;transition:border-color 0.15s;border-radius:0}
+.sfield input:focus{border-color:var(--lavender)}
+.sfield input::placeholder{color:var(--dim)}
+.sfield-hint{font-family:var(--mono);font-size:0.52rem;color:var(--dim);margin-top:3px;line-height:1.5}
+.sfield-hint a{color:var(--lavender);text-decoration:none}
+.settings-save-btn{width:100%;padding:8px;background:var(--grape);color:#fff;border:none;font-family:var(--mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:background 0.15s;margin-top:4px}
+.settings-save-btn:hover{background:#7a55b0}
+.settings-saved{font-family:var(--mono);font-size:0.6rem;color:var(--green);text-align:center;margin-top:6px;display:none}
+.settings-saved.visible{display:block}
+
+/* ── Shared UI components ── */
+.field{margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.field label{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.field label span{font-size:0.5rem;letter-spacing:0;text-transform:none;color:var(--dim)}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.78rem;padding:5px 8px;outline:none;transition:border-color 0.15s;border-radius:0;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--lavender)}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim)}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 5 5-5' stroke='%235a5858' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;cursor:pointer}
+.field textarea{resize:vertical;min-height:60px;line-height:1.5}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.price-wrap{position:relative}
+.price-wrap::before{content:'$';position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-family:var(--mono);font-size:0.78rem;pointer-events:none}
+.price-wrap input{padding-left:18px}
+
+.check-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.check-pill{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);padding:2px 7px;cursor:pointer;font-family:var(--mono);font-size:0.58rem;color:var(--muted);user-select:none;transition:all 0.1s}
+.check-pill input{display:none}
+.check-pill:has(input:checked){border-color:var(--lavender-b);color:var(--lavender);background:var(--lavender-d)}
+
+.btn{font-family:var(--mono);font-size:0.6rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--border2);background:var(--bg3);color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.btn:hover{border-color:var(--text);color:var(--text)}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn-grape{background:var(--grape);color:#fff;border-color:var(--grape)}
+.btn-grape:hover{background:#7a55b0;color:#fff}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:#8dbe82;color:#fff}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--dim);font-size:0.56rem;padding:3px 7px}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+.btn-full{width:100%;padding:8px;font-size:0.68rem}
+
+.section-label{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* Search results */
+.results-list{display:none;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);max-height:220px;overflow-y:auto}
+.results-list.visible{display:flex}
+.result-item{background:var(--bg2);padding:6px 9px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background 0.1s}
+.result-item:hover{background:var(--bg3)}
+.result-item.selected{background:var(--grape-d);border-left:2px solid var(--grape)}
+.ri-title{font-family:var(--display);font-size:0.82rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;flex:1;color:var(--text)}
+.ri-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:1px}
+.ri-chip{font-family:var(--mono);font-size:0.5rem;padding:1px 5px;border:1px solid var(--border2);color:var(--muted)}
+.ri-chip.lav{border-color:var(--lavender-b);color:var(--lavender);background:var(--lavender-d)}
+.ri-chip.grn{border-color:var(--green-b);color:var(--green);background:var(--green-d)}
+
+/* Tape record fields */
+.tape-poster-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.tape-poster{width:60px;height:85px;object-fit:cover;border:1px solid var(--border);background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tape-poster-ph{font-family:var(--mono);font-size:0.48rem;color:var(--dim);text-align:center;line-height:1.4;text-transform:uppercase;letter-spacing:0.06em;padding:4px}
+.tape-big-title{font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text);line-height:1.1;margin-bottom:2px}
+.tape-sub{font-family:var(--mono);font-size:0.6rem;color:var(--muted);margin-bottom:6px}
+.tape-badges{display:flex;gap:4px;flex-wrap:wrap}
+.tbadge{font-family:var(--mono);font-size:0.5rem;padding:2px 6px;border:1px solid;border-radius:0}
+.tb-grape{border-color:var(--grape-b);color:var(--lavender);background:var(--grape-d)}
+.tb-green{border-color:var(--green-b);color:var(--green);background:var(--green-d)}
+.tb-yellow{border-color:var(--yellow-b);color:var(--yellow);background:var(--yellow-d)}
+.tb-dim{border-color:var(--border2);color:var(--muted)}
+
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:10px}
+.fg-cell{background:var(--bg2);padding:6px 8px}
+.fg-cell.full{grid-column:1/-1}
+.fg-label{font-family:var(--mono);font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+.fg-val{font-size:0.75rem;font-weight:500;color:var(--text);line-height:1.3}
+.fg-val.muted{color:var(--muted);font-weight:400;font-size:0.7rem}
+.fg-val.grape{color:var(--lavender)}
+.fg-val.empty{color:var(--dim);font-style:italic;font-weight:400;font-size:0.68rem}
+.fg-auto{font-family:var(--mono);font-size:0.42rem;padding:1px 4px;border:1px solid var(--grape-b);color:var(--lavender);background:var(--grape-d);letter-spacing:0.06em;vertical-align:middle;margin-left:3px}
+
+.action-row{display:flex;gap:5px;flex-wrap:wrap}
+
+/* Status / feedback */
+.status-msg{font-family:var(--mono);font-size:0.62rem;padding:6px 9px;border:1px solid;line-height:1.5;margin-top:8px;display:none}
+.status-msg.visible{display:block}
+.status-msg.success{border-color:var(--green-b);color:var(--green);background:var(--green-d)}
+.status-msg.error{border-color:rgba(196,88,88,0.3);color:#e88;background:var(--red-d)}
+.status-msg.working{border-color:var(--grape-b);color:var(--lavender);background:var(--grape-d)}
+
+/* Empty states */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:2rem}
+.empty-icon{font-family:var(--display);font-size:2rem;font-weight:700;color:var(--border2);letter-spacing:0.1em;text-transform:uppercase}
+.empty-label{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);text-align:center;line-height:1.8}
+
+/* Right panel — TMDB */
+.tmdb-result-item{background:var(--bg2);padding:6px 9px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--border)}
+.tmdb-result-item:last-child{border-bottom:none}
+.tmdb-result-item:hover{background:var(--bg3)}
+.tmdb-result-item.selected{background:var(--grape-d);border-left:2px solid var(--grape)}
+.tri-title{font-family:var(--display);font-size:0.82rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;flex:1}
+.tri-year{font-family:var(--mono);font-size:0.58rem;color:var(--muted)}
+
+/* Right panel — Comps */
+.comp-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.comp-card{background:var(--bg);border:1px solid var(--border);padding:7px 8px;text-align:center}
+.cc-label{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+.cc-val{font-family:var(--display);font-size:1.1rem;font-weight:600;letter-spacing:0.04em;color:var(--text)}
+.cc-val.grape{color:var(--lavender)}
+.comp-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.6rem}
+.comp-row:last-child{border-bottom:none}
+.comp-cond{color:var(--muted)}
+.comp-price{font-weight:500;color:var(--text)}
+.comp-date{color:var(--dim);font-size:0.54rem}
+
+/* Right panel — Listing */
+.plat-tabs{display:flex;gap:3px;margin-bottom:10px;flex-wrap:wrap}
+.ptab{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--muted);transition:all 0.12s}
+.ptab.active{background:var(--grape);color:#fff;border-color:var(--grape)}
+.result-block{margin-bottom:10px}
+.result-label{font-family:var(--mono);font-size:0.54rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--lavender);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.result-text{background:var(--bg);border:1px solid var(--border);padding:7px 9px;font-family:var(--mono);font-size:0.72rem;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.result-text.title-field{font-family:var(--display);font-size:0.88rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#fff}
+.kw-wrap{display:flex;flex-wrap:wrap;gap:4px}
+.kw{background:var(--grape-d);border:1px solid var(--grape-b);color:var(--lavender);font-family:var(--mono);font-size:0.58rem;padding:2px 6px}
+.char-count{font-family:var(--mono);font-size:0.54rem;color:var(--muted);text-align:right;margin-top:2px}
+.char-count.warn{color:var(--red)}
+.copy-inline-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:0.5rem;letter-spacing:0.06em;padding:2px 6px;cursor:pointer;text-transform:uppercase;transition:all 0.12s}
+.copy-inline-btn:hover{border-color:var(--lavender);color:var(--lavender)}
+.copy-inline-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* URL push rows */
+.url-rows{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:8px}
+.url-row{background:var(--bg2);padding:5px 8px;display:flex;align-items:center;gap:6px}
+.url-row.saved-row{background:var(--green-d)}
+.plat-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.52rem;font-weight:700;color:#fff;flex-shrink:0}
+.url-plat-name{font-family:var(--mono);font-size:0.56rem;letter-spacing:0.06em;text-transform:uppercase;width:58px;flex-shrink:0;color:var(--text)}
+.url-row.saved-row .url-plat-name{color:var(--muted)}
+.url-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.56rem;padding:3px 6px;outline:none;border-radius:0;transition:border-color 0.15s}
+.url-input:focus{border-color:var(--lavender)}
+.url-input::placeholder{color:var(--dim)}
+.url-input.has-val{border-color:var(--lavender-b);background:var(--lavender-d)}
+.url-input.saved-val{border-color:var(--green-b);background:rgba(122,171,110,0.04);color:var(--muted)}
+.url-price{width:56px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.56rem;padding:3px 6px;outline:none;border-radius:0}
+.url-price:focus{border-color:var(--lavender)}
+.save-url-btn{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.06em;text-transform:uppercase;padding:3px 7px;border:1px solid var(--lavender-b);background:var(--lavender-d);color:var(--lavender);cursor:pointer;transition:all 0.12s;flex-shrink:0}
+.save-url-btn:hover{background:rgba(171,129,205,0.2)}
+.check-icon{color:var(--green);font-family:var(--mono);font-size:0.65rem;flex-shrink:0}
+.pending-icon{color:var(--border2);font-family:var(--mono);font-size:0.62rem;flex-shrink:0}
+
+/* Pricing panel */
+.mode-toggle{display:flex;border:1px solid var(--border);margin-bottom:10px}
+.mode-btn{flex:1;font-family:var(--mono);font-size:0.56rem;letter-spacing:0.08em;text-transform:uppercase;padding:5px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.12s;border-right:1px solid var(--border)}
+.mode-btn:last-child{border-right:none}
+.mode-btn.active{background:var(--grape);color:#fff}
+.price-results-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:8px}
+.price-card{background:var(--bg2);padding:8px 10px}
+.price-card.best{background:var(--grape-d)}
+.pc-plat{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pc-price{font-family:var(--display);font-size:1.4rem;font-weight:600;letter-spacing:0.04em;color:var(--text);line-height:1}
+.pc-price-label{font-family:var(--mono);font-size:0.5rem;color:var(--dim);margin-bottom:6px}
+.pc-breakdown{font-family:var(--mono);font-size:0.56rem;color:var(--muted);line-height:1.8}
+.pc-breakdown span{color:var(--text);float:right}
+.pc-margin-bar{height:2px;background:var(--border);margin-top:6px}
+.pc-margin-fill{height:100%;transition:width 0.4s ease}
+.copy-price-btn{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.06em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--border2);background:none;color:var(--dim);cursor:pointer;margin-top:4px;display:block;transition:all 0.12s}
+.copy-price-btn:hover{border-color:var(--lavender);color:var(--lavender)}
+.copy-price-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* Session log */
+.log-items{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.log-item{background:var(--bg2);padding:6px 9px;display:flex;align-items:center;gap:8px;font-size:0.75rem}
+.log-item-title{flex:1;font-family:var(--display);font-size:0.82rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase}
+.log-item-meta{font-family:var(--mono);font-size:0.54rem;color:var(--muted)}
+.log-item-status{font-family:var(--mono);font-size:0.5rem;padding:1px 6px;border:1px solid}
+.log-ok{border-color:var(--green-b);color:var(--green)}
+.log-err{border-color:rgba(196,88,88,0.3);color:var(--red)}
+.log-empty-msg{background:var(--bg2);padding:1.5rem;text-align:center;font-family:var(--mono);font-size:0.58rem;color:var(--dim)}
+
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spinner{display:inline-block;animation:spin 0.9s linear infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<div class="topbar">
+  <div class="brand">Last Laugh <em>VHS</em></div>
+  <div class="topbar-div"></div>
+  <div class="scan-bar">
+    <div class="scan-ready-dot" id="scan-dot"></div>
+    <input class="scan-input" id="global-scan" type="text"
+      placeholder="Scan barcode or search title…"
+      autocomplete="off" autocorrect="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter') handleGlobalScan()">
+  </div>
+  <div class="cred-status-row">
+    <div class="cred-dot" id="cred-dot-top"></div>
+    <div class="cred-label" id="cred-label-top">No credentials</div>
+    <button class="settings-btn" onclick="toggleSettings()">⚙ Settings</button>
+  </div>
+</div>
+
+<!-- ── App body ── -->
+<div class="app-body">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="nav-item active" data-panel="intake" onclick="switchPanel('intake',this)">
+      ◈
+      <div class="nav-tooltip">Intake</div>
+      <div class="pip"></div>
+    </div>
+    <div class="nav-item" data-panel="pricing" onclick="switchPanel('pricing',this)">
+      ◎
+      <div class="nav-tooltip">Pricing</div>
+    </div>
+    <div class="nav-item" data-panel="listing" onclick="switchPanel('listing',this)">
+      ◻
+      <div class="nav-tooltip">Listing writer</div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" data-panel="lots" onclick="switchPanel('lots',this)">
+      ⊞
+      <div class="nav-tooltip">Lot builder</div>
+    </div>
+    <div class="nav-item" data-panel="labels" onclick="switchPanel('labels',this)">
+      ▦
+      <div class="nav-tooltip">Label printer</div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-item" data-panel="log" onclick="switchPanel('log',this)">
+      ≡
+      <div class="nav-tooltip">Session log</div>
+    </div>
+  </nav>
+
+  <!-- ── CENTER: Intake panel (default) ── -->
+  <div class="center">
+    <div class="panel-head">
+      <div class="panel-label" id="center-label">Active tape</div>
+      <div class="pipeline" id="pipeline">
+        <div class="pip-step" id="pip-scanned">Scanned</div>
+        <div class="pip-arrow">›</div>
+        <div class="pip-step active" id="pip-intake">Intake</div>
+        <div class="pip-arrow">›</div>
+        <div class="pip-step" id="pip-priced">Priced</div>
+        <div class="pip-arrow">›</div>
+        <div class="pip-step" id="pip-listed">Listed</div>
+      </div>
+    </div>
+
+    <!-- INTAKE PANEL -->
+    <div class="tool-panel active" id="panel-intake">
+      <div class="panel-body">
+        <!-- Empty state -->
+        <div class="empty-state" id="intake-empty">
+          <div class="empty-icon">LLV</div>
+          <div class="empty-label">Scan a barcode or search a title<br>in the bar above to begin intake</div>
+        </div>
+
+        <!-- Tape record (hidden until tape selected) -->
+        <div id="intake-record" style="display:none">
+
+          <!-- Poster + title -->
+          <div class="tape-poster-row">
+            <img class="tape-poster" id="tape-poster-img" src="" alt="" style="display:none">
+            <div class="tape-poster tape-poster-ph" id="tape-poster-ph" style="display:none"></div>
+            <div>
+              <div class="tape-big-title" id="tape-big-title"></div>
+              <div class="tape-sub" id="tape-sub"></div>
+              <div class="tape-badges" id="tape-badges"></div>
+            </div>
+          </div>
+
+          <!-- Form fields -->
+          <div class="section-label">Tape details</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Condition *</label>
+              <select id="f-condition" onchange="syncReview()">
+                <option value="">— select —</option>
+                <option>SEALED</option><option>MINT (M)</option><option>NEAR MINT (NM)</option>
+                <option>VERY GOOD (VG)</option><option>VERY GOOD + (VG+)</option>
+                <option>GOOD (G)</option><option>FAIR/FOR PARTS</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Format</label>
+              <select id="f-format" onchange="syncReview()">
+                <option>VHS</option><option>BETA</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Genre <span>(auto-filled · override if needed)</span></label>
+            <select id="f-genre" onchange="syncReview()">
+              <option value="">— auto from TMDB —</option>
+              <option>ACTION</option><option>COMEDY</option><option>DRAMA</option>
+              <option>HORROR</option><option>SCI-FI</option><option>THRILLER</option>
+              <option>ROMANCE</option><option>DOCUMENTARY</option><option>ANIMATION</option>
+              <option>KIDS/FAMILY</option><option>SPORTS</option><option>MUSIC/CONCERT</option>
+              <option>WESTERN</option><option>MARTIAL ARTS</option><option>FOREIGN LANGUAGE</option>
+              <option>EXERCISE/FITNESS</option><option>OTHER</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Cost of goods ($)</label>
+              <div class="price-wrap"><input type="number" id="f-cogs" placeholder="0.00" step="0.01" min="0" oninput="syncReview()"></div>
+            </div>
+            <div class="field">
+              <label>Asking price ($)</label>
+              <div class="price-wrap"><input type="number" id="f-price" placeholder="0.00" step="0.01" min="0" oninput="syncReview()"></div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Storage location</label>
+              <input type="text" id="f-location" placeholder="e.g. BOX-01" oninput="syncReview()">
+            </div>
+            <div class="field">
+              <label>Label / Studio</label>
+              <input type="text" id="f-label" placeholder="e.g. Vestron Video" oninput="syncReview()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>UPC <span>(auto-filled from scan)</span></label>
+            <input type="text" id="f-upc" placeholder="Scan or enter manually" oninput="syncReview()">
+          </div>
+
+          <div class="field">
+            <label>Special features</label>
+            <div class="check-pills">
+              <label class="check-pill"><input type="checkbox" value="BIG BOX" onchange="syncReview()"> Big Box</label>
+              <label class="check-pill"><input type="checkbox" value="CLAMSHELL" onchange="syncReview()"> Clamshell</label>
+              <label class="check-pill"><input type="checkbox" value="SLIPCOVER" onchange="syncReview()"> Slipcover</label>
+              <label class="check-pill"><input type="checkbox" value="INSERT INCLUDED" onchange="syncReview()"> Insert</label>
+              <label class="check-pill"><input type="checkbox" value="EX-RENTAL" onchange="syncReview()"> Ex-Rental</label>
+              <label class="check-pill"><input type="checkbox" value="FACTORY SEALED" onchange="syncReview()"> Sealed</label>
+              <label class="check-pill"><input type="checkbox" value="CULT CLASSIC" onchange="syncReview()"> Cult Classic</label>
+              <label class="check-pill"><input type="checkbox" value="WATERMARKS" onchange="syncReview()"> Watermarks</label>
+              <label class="check-pill"><input type="checkbox" value="SCREENER" onchange="syncReview()"> Screener</label>
+              <label class="check-pill"><input type="checkbox" value="STICKER RESIDUE" onchange="syncReview()"> Sticker Residue</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Notes</label>
+            <textarea id="f-notes" placeholder="Condition details, provenance, rarity notes…" oninput="syncReview()"></textarea>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-green btn-full" id="push-btn" onclick="pushToAirtable()">↗ Push to Airtable</button>
+          </div>
+          <div class="status-msg" id="push-status"></div>
+
+          <div style="margin-top:10px;text-align:right">
+            <button class="btn btn-ghost" onclick="clearIntake()">Clear · next tape</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING PANEL (center view) -->
+    <div class="tool-panel" id="panel-pricing">
+      <div class="panel-body">
+        <div class="section-label">Target</div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="mode-profit" onclick="setPricingMode('profit')">Target profit ($)</button>
+          <button class="mode-btn" id="mode-margin" onclick="setPricingMode('margin')">Target margin (%)</button>
+        </div>
+        <div class="field" id="field-profit">
+          <label>Target profit</label>
+          <div class="price-wrap"><input type="number" id="p-target-profit" placeholder="8.00" step="0.01" min="0" oninput="calcPricing()"></div>
+        </div>
+        <div class="field" id="field-margin" style="display:none">
+          <label>Target margin %</label>
+          <input type="number" id="p-target-margin" placeholder="45" step="1" min="0" max="100" oninput="calcPricing()" style="padding-right:24px">
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">Costs</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Cost of goods <span>(from tape)</span></label>
+            <div class="price-wrap"><input type="number" id="p-cogs" placeholder="0.00" step="0.01" min="0" oninput="calcPricing()"></div>
+          </div>
+          <div class="field">
+            <label>Pirate Ship label</label>
+            <div class="price-wrap"><input type="number" id="p-ship" placeholder="4.50" step="0.01" min="0" oninput="calcPricing()"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Packaging</label>
+            <div class="price-wrap"><input type="number" id="p-pack" placeholder="0.40" step="0.01" min="0" oninput="calcPricing()"></div>
+          </div>
+          <div class="field">
+            <label>Buyer pays shipping</label>
+            <div class="price-wrap"><input type="number" id="p-ship-buyer" placeholder="0.00" step="0.01" min="0" oninput="calcPricing()"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>eBay store tier</label>
+          <select id="p-ebay-store" onchange="calcPricing()">
+            <option value="no">No store (13.25%)</option>
+            <option value="basic">Basic store (12.35%)</option>
+            <option value="premium">Premium store (11.5%)</option>
+          </select>
+        </div>
+        <div class="section-label" style="margin-top:12px">Required list price</div>
+        <div class="price-results-grid" id="pricing-results">
+          <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center;padding:8px">Enter target and costs above</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOTS, LABELS, LOG panels — simplified placeholders, full build in right panel -->
+    <div class="tool-panel" id="panel-lots">
+      <div class="panel-body">
+        <div class="empty-state">
+          <div class="empty-icon">⊞</div>
+          <div class="empty-label">Lot builder<br>Use the right panel to search and build lots</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-panel" id="panel-labels">
+      <div class="panel-body">
+        <div class="empty-state">
+          <div class="empty-icon">▦</div>
+          <div class="empty-label">Label printer<br>Use the right panel to generate labels</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-panel" id="panel-log">
+      <div class="panel-body">
+        <div class="section-label">Session log <span id="log-count-label" style="font-family:var(--mono);font-size:0.54rem;color:var(--muted);letter-spacing:0;text-transform:none;margin-left:auto">0 tapes</span></div>
+        <div id="session-log-container">
+          <div class="log-empty-msg" id="log-empty">No tapes processed this session</div>
+          <div class="log-items" id="log-items" style="display:none"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:6px">
+          <button class="btn btn-ghost" onclick="exportSessionCSV()">Export CSV</button>
+          <button class="btn btn-ghost" onclick="clearSessionLog()">Clear log</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div class="right">
+    <div class="right-tabs">
+      <button class="rtab active" onclick="switchRightTab('tmdb',this)">TMDB</button>
+      <button class="rtab" onclick="switchRightTab('comps',this)">Comps</button>
+      <button class="rtab" onclick="switchRightTab('listing',this)">Listing</button>
+      <button class="rtab" onclick="switchRightTab('pricing-right',this)">Pricing</button>
+    </div>
+
+    <!-- TMDB tab -->
+    <div class="right-body" id="rtab-tmdb">
+      <div class="section-label">Search TMDB</div>
+      <div class="field">
+        <input type="text" id="tmdb-search-input" placeholder="Type a film title…"
+          onkeydown="if(event.key==='Enter') searchTMDB()"
+          oninput="onTMDBInput()">
+      </div>
+      <div class="results-list" id="tmdb-results"></div>
+      <div class="status-msg" id="tmdb-status"></div>
+    </div>
+
+    <!-- Comps tab -->
+    <div class="right-body" id="rtab-comps" style="display:none">
+      <div class="empty-state" id="comps-empty">
+        <div class="empty-icon">◎</div>
+        <div class="empty-label">Select a tape to see<br>eBay sold comps</div>
+      </div>
+      <div id="comps-content" style="display:none">
+        <div class="section-label" id="comps-title">eBay sold comps</div>
+        <div class="comp-summary" id="comp-summary"></div>
+        <div id="comp-rows"></div>
+        <a class="btn btn-ghost btn-full" id="comps-ebay-link" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:5px;text-decoration:none;margin-top:8px">↗ View all on eBay</a>
+      </div>
+    </div>
+
+    <!-- Listing tab -->
+    <div class="right-body" id="rtab-listing" style="display:none">
+      <div class="section-label">Platform</div>
+      <div class="plat-tabs" id="plat-tabs">
+        <button class="ptab active" data-plat="all">All platforms</button>
+        <button class="ptab" data-plat="eBay">eBay</button>
+        <button class="ptab" data-plat="Etsy">Etsy</button>
+        <button class="ptab" data-plat="Facebook Marketplace">Facebook</button>
+        <button class="ptab" data-plat="Mercari">Mercari</button>
+      </div>
+      <button class="btn btn-grape btn-full" id="gen-listing-btn" onclick="generateListing()">Generate listing</button>
+      <div class="status-msg" id="listing-status" style="margin-bottom:8px"></div>
+      <div id="listing-output" style="margin-top:10px"></div>
+      <div id="url-push-section" style="display:none;margin-top:12px">
+        <div class="section-label">Save listing URLs</div>
+        <div class="url-rows" id="listing-url-rows"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <div style="font-family:var(--mono);font-size:0.54rem;color:var(--dim)" id="url-progress">0 of 4 saved</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing right tab (mirrors center but compact) -->
+    <div class="right-body" id="rtab-pricing-right" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon">◎</div>
+        <div class="empty-label">Switch to the Pricing panel<br>in the sidebar for the full calculator</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ── Settings drawer ── -->
+<div class="settings-drawer" id="settings-drawer">
+  <div class="settings-head">
+    <div class="settings-head-title">Settings</div>
+    <button class="settings-close" onclick="toggleSettings()">✕</button>
+  </div>
+  <div class="settings-body">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Anthropic</div>
+      <div class="sfield">
+        <label>Claude API Key</label>
+        <input type="password" id="s-claude" placeholder="sk-ant-api03-…">
+        <div class="sfield-hint">Get at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">TMDB</div>
+      <div class="sfield">
+        <label>TMDB API Key</label>
+        <input type="password" id="s-tmdb" placeholder="Your TMDB v3 key">
+        <div class="sfield-hint">Get at <a href="https://themoviedb.org" target="_blank">themoviedb.org</a> → Settings → API</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Airtable</div>
+      <div class="sfield">
+        <label>Personal Access Token</label>
+        <input type="password" id="s-at-token" placeholder="patXXXXXXXXXXXXXX">
+        <div class="sfield-hint">airtable.com → Developer Hub → Personal access tokens<br>Scopes needed: data.records:read/write, schema.bases:read/write</div>
+      </div>
+      <div class="sfield">
+        <label>Base ID</label>
+        <input type="text" id="s-at-base" placeholder="appWgVRAo4qHiIe04">
+        <div class="sfield-hint">The appXXXX part of your Airtable base URL — note capital I not lowercase l</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">eBay Developer (pending approval)</div>
+      <div class="sfield">
+        <label>Client ID (App ID)</label>
+        <input type="password" id="s-ebay-client-id" placeholder="Pending approval">
+        <div class="sfield-hint">developer.ebay.com → Application Keys → App ID</div>
+      </div>
+      <div class="sfield">
+        <label>Client Secret (Cert ID)</label>
+        <input type="password" id="s-ebay-client-secret" placeholder="Pending approval">
+        <div class="sfield-hint">developer.ebay.com → Application Keys → Cert ID</div>
+      </div>
+    </div>
+
+    <button class="settings-save-btn" onclick="saveSettings()">Save all credentials</button>
+    <div class="settings-saved" id="settings-saved">✓ All credentials saved to this device</div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentMovie = null;
+let sessionLog = [];
+let currentListingPlatform = 'all';
+let generatedListings = null;
+let savedListingUrls = {};
+let pricingMode = 'profit';
+let tmdbSearchTimeout = null;
+
+const TAPES_TABLE = 'tblaB8KaaqrrWu2Te';
+const PLATFORMS = ['eBay','Etsy','Facebook Marketplace','Mercari'];
+const PLAT_COLORS = {'eBay':'#e53238','Etsy':'#f56400','Facebook Marketplace':'#1877f2','Mercari':'#ea3a74'};
+const PLAT_SHORT = {'eBay':'eB','Etsy':'Et','Facebook Marketplace':'fb','Mercari':'M'};
+const PLAT_AT = {'eBay':'EBAY','Etsy':'ETSY','Facebook Marketplace':'FACEBOOK MARKETPLACE','Mercari':'MERCARI'};
+
+// ─────────────────────────────────────────────
+// CREDENTIALS (localStorage)
+// ─────────────────────────────────────────────
+function getCred(key){ return localStorage.getItem('llv_'+key)||''; }
+function setCred(key,val){ localStorage.setItem('llv_'+key,val); }
+
+function saveSettings(){
+  setCred('claude', document.getElementById('s-claude').value.trim());
+  setCred('tmdb', document.getElementById('s-tmdb').value.trim());
+  setCred('at_token', document.getElementById('s-at-token').value.trim());
+  setCred('at_base', document.getElementById('s-at-base').value.trim());
+  setCred('ebay_id', document.getElementById('s-ebay-client-id').value.trim());
+  setCred('ebay_secret', document.getElementById('s-ebay-client-secret').value.trim());
+  document.getElementById('settings-saved').classList.add('visible');
+  setTimeout(()=>document.getElementById('settings-saved').classList.remove('visible'),3000);
+  updateCredStatus();
+}
+
+function loadSettingsFields(){
+  document.getElementById('s-claude').value = getCred('claude');
+  document.getElementById('s-tmdb').value = getCred('tmdb');
+  document.getElementById('s-at-token').value = getCred('at_token');
+  document.getElementById('s-at-base').value = getCred('at_base');
+  document.getElementById('s-ebay-client-id').value = getCred('ebay_id');
+  document.getElementById('s-ebay-client-secret').value = getCred('ebay_secret');
+}
+
+function updateCredStatus(){
+  const hasAll = getCred('claude') && getCred('tmdb') && getCred('at_token') && getCred('at_base');
+  const dot = document.getElementById('cred-dot-top');
+  const label = document.getElementById('cred-label-top');
+  dot.className = 'cred-dot' + (hasAll?' ok':'');
+  label.textContent = hasAll ? 'All credentials set' : 'Credentials missing';
+}
+
+function toggleSettings(){
+  document.getElementById('settings-drawer').classList.toggle('open');
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+function switchPanel(name, el){
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+  const labels = {intake:'Active tape',pricing:'Pricing calculator',lots:'Lot builder',labels:'Label printer',log:'Session log'};
+  document.getElementById('center-label').textContent = labels[name]||name;
+}
+
+function switchRightTab(name, btn){
+  document.querySelectorAll('.right-body').forEach(b=>b.style.display='none');
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('rtab-'+name).style.display='';
+  btn.classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+// GLOBAL SCAN (top bar)
+// ─────────────────────────────────────────────
+function handleGlobalScan(){
+  const input = document.getElementById('global-scan');
+  const raw = input.value.trim();
+  input.value='';
+  if(!raw) return;
+
+  const cleaned = raw.replace(/[\s\-]/g,'');
+
+  // LLV custom barcode
+  if(raw.startsWith('LLV-')){
+    showStatus('scan-status','LLV barcode — use label printer to look up','working');
+    return;
+  }
+
+  // Looks like a barcode (all digits)
+  if(/^\d{6,14}$/.test(cleaned)){
+    // Save UPC to intake field
+    document.getElementById('f-upc').value = cleaned;
+    // Open eBay comps
+    const ebayUrl = buildEbayUrl(cleaned);
+    window.open(ebayUrl,'_blank');
+    // Show eBay comps in right panel
+    showBarcodeComps(cleaned);
+    // Switch to TMDB tab so user can search title
+    switchRightTab('tmdb', document.querySelector('.rtab'));
+    // Show intake panel
+    switchPanel('intake', document.querySelector('[data-panel="intake"]'));
+    document.getElementById('intake-empty').style.display='none';
+    document.getElementById('intake-record').style.display='';
+    document.getElementById('tmdb-search-input').focus();
+    return;
+  }
+
+  // Text — treat as title search
+  document.getElementById('tmdb-search-input').value = raw;
+  switchRightTab('tmdb', document.querySelector('.rtab'));
+  switchPanel('intake', document.querySelector('[data-panel="intake"]'));
+  searchTMDB();
+}
+
+function buildEbayUrl(query){
+  return `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Sold=1&LH_Complete=1&_sop=13`;
+}
+
+function showBarcodeComps(barcode){
+  document.getElementById('comps-empty').style.display='none';
+  document.getElementById('comps-content').style.display='';
+  document.getElementById('comps-title').textContent = `eBay sold · barcode ${barcode}`;
+  document.getElementById('comp-summary').innerHTML = `
+    <div class="comp-card"><div class="cc-label">eBay Link</div><div class="cc-val" style="font-size:0.7rem;color:var(--lavender)">Opened</div></div>
+    <div class="comp-card" style="grid-column:2/-1"><div class="cc-label">Search</div><div class="cc-val" style="font-size:0.62rem;color:var(--muted);font-family:var(--mono)">${barcode}</div></div>`;
+  document.getElementById('comp-rows').innerHTML = `<div style="font-family:var(--mono);font-size:0.58rem;color:var(--dim);padding:8px 0;line-height:1.8">eBay comps opened in new tab.<br>Enter the title in TMDB tab to pull metadata.<br><br>Once eBay API is approved, live comp data will appear here automatically.</div>`;
+  const ebayUrl = buildEbayUrl(barcode);
+  document.getElementById('comps-ebay-link').href = ebayUrl;
+}
+
+// ─────────────────────────────────────────────
+// TMDB SEARCH
+// ─────────────────────────────────────────────
+function onTMDBInput(){
+  clearTimeout(tmdbSearchTimeout);
+  const q = document.getElementById('tmdb-search-input').value.trim();
+  if(q.length < 2){ document.getElementById('tmdb-results').classList.remove('visible'); return; }
+  tmdbSearchTimeout = setTimeout(searchTMDB, 500);
+}
+
+async function searchTMDB(){
+  const q = document.getElementById('tmdb-search-input').value.trim();
+  if(!q) return;
+  const key = getCred('tmdb');
+  if(!key){ showStatus('tmdb-status','Please add your TMDB API key in Settings','error'); return; }
+
+  const el = document.getElementById('tmdb-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.62rem;color:var(--muted)"><span class="spinner">◌</span> Searching…</div>`;
+  el.classList.add('visible');
+
+  try{
+    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${key}&query=${encodeURIComponent(q)}&include_adult=false`);
+    const data = await res.json();
+    if(!data.results?.length){ el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.62rem;color:var(--muted)">No results</div>`; return; }
+    window._tmdbResultsMap={};
+    el.innerHTML = data.results.slice(0,6).map(m=>{
+      window._tmdbResultsMap[m.id]=m;
+      return `<div class="tmdb-result-item" onclick="selectMovie(${m.id})" data-id="${m.id}">
+        <div class="tri-title">${m.title}</div>
+        <div class="tri-year">${m.release_date?m.release_date.slice(0,4):'—'}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.62rem;color:#e88">Error: ${e.message}</div>`;
+  }
+}
+
+async function selectMovie(id){
+  const key = getCred('tmdb');
+  document.querySelectorAll('.tmdb-result-item').forEach(el=>el.classList.toggle('selected',el.dataset.id==id));
+
+  try{
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${key}&append_to_response=credits`);
+    const m = await res.json();
+    const director = m.credits?.crew?.find(c=>c.job==='Director')?.name||'';
+    const cast = (m.credits?.cast||[]).slice(0,5).map(c=>c.name).join(', ');
+    const genreMap={'Action':'ACTION','Adventure':'ACTION','Comedy':'COMEDY','Drama':'DRAMA','Horror':'HORROR','Science Fiction':'SCI-FI','Thriller':'THRILLER','Romance':'ROMANCE','Documentary':'DOCUMENTARY','Animation':'ANIMATION','Family':'KIDS/FAMILY','Music':'MUSIC/CONCERT','Western':'WESTERN','Crime':'THRILLER','Mystery':'THRILLER','War':'ACTION','History':'DRAMA','Fantasy':'SCI-FI','Martial Arts':'MARTIAL ARTS','Foreign':'FOREIGN LANGUAGE','Sport':'SPORTS'};
+    const genre = genreMap[m.genres?.[0]?.name]||'OTHER';
+
+    currentMovie = {
+      title:m.title,
+      year:m.release_date?m.release_date.slice(0,4):'',
+      genre,
+      director,
+      cast,
+      overview:m.overview||'',
+      synopsis:m.overview||'',
+      poster:m.poster_path?`https://image.tmdb.org/t/p/w92${m.poster_path}`:null,
+      tmdbId:m.id
+    };
+
+    populateIntakeForm();
+    updateCompsPanel();
+
+  }catch(e){ console.error('TMDB fetch error:',e); }
+}
+
+function populateIntakeForm(){
+  if(!currentMovie) return;
+
+  document.getElementById('intake-empty').style.display='none';
+  document.getElementById('intake-record').style.display='';
+
+  // Poster
+  if(currentMovie.poster){
+    const img = document.getElementById('tape-poster-img');
+    img.src = currentMovie.poster;
+    img.style.display='';
+    document.getElementById('tape-poster-ph').style.display='none';
+  } else {
+    document.getElementById('tape-poster-img').style.display='none';
+    const ph = document.getElementById('tape-poster-ph');
+    ph.textContent = currentMovie.title;
+    ph.style.display='';
+  }
+
+  document.getElementById('tape-big-title').textContent = currentMovie.title;
+  document.getElementById('tape-sub').textContent = [currentMovie.year, currentMovie.genre, currentMovie.director?`Dir. ${currentMovie.director}`:''].filter(Boolean).join(' · ');
+
+  // Auto-set genre dropdown
+  document.getElementById('f-genre').value = currentMovie.genre||'';
+
+  updateBadges();
+  syncReview();
+
+  // Ensure intake panel is visible
+  switchPanel('intake', document.querySelector('[data-panel="intake"]'));
+}
+
+function updateBadges(){
+  const condition = document.getElementById('f-condition').value;
+  const status = 'Unlisted';
+  const badges = document.getElementById('tape-badges');
+  badges.innerHTML = [
+    condition?`<span class="tbadge tb-grape">${condition}</span>`:'',
+    `<span class="tbadge tb-dim">VHS</span>`,
+    `<span class="tbadge tb-yellow">${status}</span>`,
+  ].join('');
+}
+
+function syncReview(){
+  updateBadges();
+  // Sync COGS to pricing panel
+  const cogs = document.getElementById('f-cogs').value;
+  if(cogs) document.getElementById('p-cogs').value = cogs;
+}
+
+function updateCompsPanel(){
+  if(!currentMovie) return;
+  const ebayUrl = buildEbayUrl(currentMovie.title+' VHS');
+  document.getElementById('comps-empty').style.display='none';
+  document.getElementById('comps-content').style.display='';
+  document.getElementById('comps-title').textContent = `eBay sold · ${currentMovie.title} VHS`;
+  document.getElementById('comp-summary').innerHTML = `
+    <div class="comp-card" style="grid-column:1/-1">
+      <div class="cc-label">Search ready</div>
+      <div style="font-family:var(--mono);font-size:0.58rem;color:var(--dim);margin-top:4px;line-height:1.7">eBay API integration coming soon — will show live sold prices automatically. Click below to check manually.</div>
+    </div>`;
+  document.getElementById('comp-rows').innerHTML='';
+  document.getElementById('comps-ebay-link').href = ebayUrl;
+}
+
+// ─────────────────────────────────────────────
+// AIRTABLE PUSH
+// ─────────────────────────────────────────────
+async function pushToAirtable(){
+  if(!currentMovie){ alert('Please select a film first.'); return; }
+  const condition = document.getElementById('f-condition').value;
+  if(!condition){ document.getElementById('f-condition').style.borderColor='var(--red)'; setTimeout(()=>document.getElementById('f-condition').style.borderColor='',1500); alert('Please select a condition.'); return; }
+
+  const token = getCred('at_token');
+  const base = getCred('at_base');
+  if(!token||!base){ alert('Please add your Airtable credentials in Settings.'); toggleSettings(); return; }
+
+  const btn = document.getElementById('push-btn');
+  btn.disabled=true; btn.textContent='⏳ Pushing…';
+  showStatus('push-status','Creating record in Airtable…','working');
+
+  const specials = Array.from(document.querySelectorAll('.check-pill input:checked')).map(c=>c.value);
+  const price = parseFloat(document.getElementById('f-price').value)||null;
+  const cogs = parseFloat(document.getElementById('f-cogs').value)||null;
+  const upc = document.getElementById('f-upc').value.trim();
+  const label = document.getElementById('f-label').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+  const genreOverride = document.getElementById('f-genre').value;
+
+  const fields = {
+    'TITLE': currentMovie.title,
+    'FORMAT': document.getElementById('f-format').value,
+    'CONDITION': condition,
+    'DATE ACQUIRED': new Date().toISOString().slice(0,10),
+  };
+  if(currentMovie.year) fields['YEAR'] = parseInt(currentMovie.year);
+  if(genreOverride||currentMovie.genre) fields['GENRE'] = genreOverride||currentMovie.genre;
+  if(currentMovie.director) fields['DIRECTOR'] = currentMovie.director;
+  if(currentMovie.cast) fields['CAST'] = currentMovie.cast;
+  if(currentMovie.synopsis) fields['SYNOPSIS'] = currentMovie.synopsis;
+  if(label) fields['LABEL / STUDIO'] = label;
+  if(location) fields['STORAGE LOCATION'] = location;
+  if(upc) fields['UPC'] = upc;
+  if(price!==null) fields['ASKING PRICE'] = price;
+  if(cogs!==null) fields['COST OF GOODS'] = cogs;
+  if(specials.length) fields['SPECIAL FEATURES'] = specials;
+  if(notes) fields['NOTES'] = notes;
+
+  try{
+    const url = 'https://api.airtable.com/v0/' + base.trim() + '/' + TAPES_TABLE;
+    const res = await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({fields})});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error?.message||`Error ${res.status}`);
+
+    showStatus('push-status',`✓ Record created — ${data.id}`,'success');
+    addSessionLog({title:currentMovie.title,year:currentMovie.year,condition,id:data.id,status:'ok'});
+
+    setTimeout(()=>{ clearIntake(); }, 2500);
+
+  }catch(e){
+    showStatus('push-status',`✗ Failed: ${e.message}`,'error');
+    addSessionLog({title:currentMovie.title,year:currentMovie.year,condition,id:null,status:'error'});
+  }finally{
+    btn.disabled=false; btn.textContent='↗ Push to Airtable';
+  }
+}
+
+function clearIntake(){
+  currentMovie=null;
+  generatedListings=null;
+  savedListingUrls={};
+  document.getElementById('intake-empty').style.display='';
+  document.getElementById('intake-record').style.display='none';
+  document.getElementById('tmdb-search-input').value='';
+  document.getElementById('tmdb-results').classList.remove('visible');
+  document.getElementById('push-status').className='status-msg';
+  document.getElementById('f-condition').value='';
+  document.getElementById('f-format').value='VHS';
+  document.getElementById('f-genre').value='';
+  document.getElementById('f-price').value='';
+  document.getElementById('f-cogs').value='';
+  document.getElementById('f-location').value='';
+  document.getElementById('f-upc').value='';
+  document.getElementById('f-label').value='';
+  document.getElementById('f-notes').value='';
+  document.querySelectorAll('.check-pill input').forEach(cb=>cb.checked=false);
+  document.getElementById('listing-output').innerHTML='';
+  document.getElementById('url-push-section').style.display='none';
+  document.getElementById('comps-empty').style.display='';
+  document.getElementById('comps-content').style.display='none';
+  document.getElementById('global-scan').focus();
+}
+
+// ─────────────────────────────────────────────
+// LISTING WRITER
+// ─────────────────────────────────────────────
+document.querySelectorAll('.ptab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentListingPlatform = btn.dataset.plat;
+  });
+});
+
+async function generateListing(){
+  if(!currentMovie){ alert('Please select a tape first.'); return; }
+  const claudeKey = getCred('claude');
+  if(!claudeKey){ alert('Please add your Claude API key in Settings.'); toggleSettings(); return; }
+
+  const btn = document.getElementById('gen-listing-btn');
+  btn.disabled=true; btn.textContent='⏳ Generating…';
+  showStatus('listing-status','Crafting listings…','working');
+
+  const platforms = currentListingPlatform==='all' ? PLATFORMS : [currentListingPlatform];
+  const specials = Array.from(document.querySelectorAll('.check-pill input:checked')).map(c=>c.value);
+  const genreOverride = document.getElementById('f-genre').value;
+  const label = document.getElementById('f-label').value.trim();
+  const notes = document.getElementById('f-notes').value.trim();
+
+  const tapeInfo = [
+    `Title: ${currentMovie.title}`,
+    currentMovie.year?`Year: ${currentMovie.year}`:'',
+    (genreOverride||currentMovie.genre)?`Genre: ${genreOverride||currentMovie.genre}`:'',
+    document.getElementById('f-condition').value?`Condition: ${document.getElementById('f-condition').value}`:'',
+    label?`Label/Studio: ${label}`:'',
+    currentMovie.director?`Director: ${currentMovie.director}`:'',
+    currentMovie.cast?`Cast: ${currentMovie.cast}`:'',
+    specials.length?`Special features: ${specials.join(', ')}`:'',
+    currentMovie.synopsis?`Synopsis: ${currentMovie.synopsis}`:'',
+    notes?`Notes: ${notes}`:'',
+  ].filter(Boolean).join('\n');
+
+  const guide = {
+    'eBay':'eBay: title max 80 chars, keyword-dense. Description: structured, condition prominent, shipping note. 8-12 SEO keywords.',
+    'Etsy':'Etsy: title up to 140 chars, nostalgia-driven. Description: storytelling tone, collectibility. 13 tags.',
+    'Facebook Marketplace':'Facebook: title under 60 chars, casual. Description: short, lead with condition. 8+ keywords still required.',
+    'Mercari':'Mercari: title max 40 chars. Brief honest description. 8+ hashtag keywords.'
+  };
+
+  const isMulti = currentListingPlatform==='all';
+  const prompt = isMulti
+    ? `Generate VHS listings for ALL platforms:\n\n${tapeInfo}\n\nGuidelines:\n${platforms.map(p=>guide[p]).join('\n')}\n\nIMPORTANT: Every platform MUST include keywords[] with 8-12 terms.\n\nReturn JSON: {"eBay":{title,description,keywords[]},"Etsy":{...},"Facebook Marketplace":{...},"Mercari":{...}}. JSON only.`
+    : `Generate a VHS listing:\n\n${tapeInfo}\n\nPlatform: ${currentListingPlatform}\n${guide[currentListingPlatform]}\n\nIMPORTANT: Include keywords[] with 8-12 terms.\n\nReturn JSON: {title,description,keywords[]}. JSON only.`;
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2200,system:'You are an expert VHS reseller. Generate optimized marketplace listings. Return valid JSON only, no markdown.',messages:[{role:'user',content:prompt}]})
+    });
+    if(!resp.ok) throw new Error(`API error ${resp.status}`);
+    const d = await resp.json();
+    const raw = d.content.map(c=>c.text||'').join('').replace(/^```json\n?/,'').replace(/^```\n?/,'').replace(/\n?```$/,'').trim();
+    generatedListings = {parsed:JSON.parse(raw),isMulti,platforms};
+    window._genMap = isMulti ? generatedListings.parsed : {[currentListingPlatform]:generatedListings.parsed};
+    renderListingOutput();
+    showStatus('listing-status','','');
+    document.getElementById('listing-status').className='status-msg';
+  }catch(e){
+    showStatus('listing-status',`Error: ${e.message}`,'error');
+  }finally{
+    btn.disabled=false; btn.textContent='Generate listing';
+  }
+}
+
+function renderListingOutput(){
+  const { platforms } = generatedListings;
+  const container = document.getElementById('listing-output');
+
+  // Tabs for result sections
+  const tabs = platforms.map((p,i)=>`<button class="ptab${i===0?' active':''}" onclick="switchListingResultTab('${p.replace(/\s+/g,'_')}',this)">${p==='Facebook Marketplace'?'Facebook':p}</button>`).join('');
+  const sections = platforms.map((p,i)=>{
+    const key=p.replace(/\s+/g,'_');
+    const d=window._genMap[p];
+    if(!d) return `<div id="lrs-${key}" style="${i>0?'display:none':''}">${esc('No data')}</div>`;
+    const kws=(d.keywords||[]).map(k=>`<span class="kw">${esc(k)}</span>`).join('');
+    return `<div id="lrs-${key}" style="${i>0?'display:none':''}">
+      <div class="result-block">
+        <div class="result-label">Title <button class="copy-inline-btn" id="ct-${key}" onclick="copyFromGen('${p}','title','ct-${key}')">Copy</button></div>
+        <div class="result-text title-field">${esc(d.title||'')}</div>
+        ${d.title?`<div class="char-count ${d.title.length>80?'warn':''}">${d.title.length} chars</div>`:''}
+      </div>
+      <div class="result-block">
+        <div class="result-label">Description <button class="copy-inline-btn" id="cd-${key}" onclick="copyFromGen('${p}','description','cd-${key}')">Copy</button></div>
+        <div class="result-text">${esc(d.description||'')}</div>
+      </div>
+      ${kws?`<div class="result-block"><div class="result-label">Keywords <button class="copy-inline-btn" id="ck-${key}" onclick="copyFromGen('${p}','keywords','ck-${key}')">Copy all</button></div><div class="kw-wrap">${kws}</div></div>`:''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="plat-tabs" style="margin-bottom:8px">${tabs}</div>${sections}`;
+
+  // Build URL push rows
+  const urlRows = document.getElementById('listing-url-rows');
+  urlRows.innerHTML = platforms.map(p=>{
+    const key=p.replace(/\s+/g,'_');
+    return `<div class="url-row" id="ur-${key}">
+      <div class="plat-icon" style="background:${PLAT_COLORS[p]}">${PLAT_SHORT[p]}</div>
+      <div class="url-plat-name">${p==='Facebook Marketplace'?'Facebook':p}</div>
+      <input class="url-input" type="text" id="ui-${key}" placeholder="Paste URL…" oninput="onUrlInput('${key}')">
+      <input class="url-price" type="number" id="up-${key}" placeholder="Price" step="0.01" min="0">
+      <div id="ua-${key}"><span class="pending-icon">○</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('url-push-section').style.display='';
+  updateUrlProgress();
+}
+
+function switchListingResultTab(key,btn){
+  document.querySelectorAll('#listing-output [id^="lrs-"]').forEach(s=>s.style.display='none');
+  document.querySelectorAll('#listing-output .ptab').forEach(b=>b.classList.remove('active'));
+  const sec=document.getElementById('lrs-'+key);
+  if(sec)sec.style.display='';
+  btn.classList.add('active');
+}
+
+function onUrlInput(key){
+  const input=document.getElementById('ui-'+key);
+  const actionEl=document.getElementById('ua-'+key);
+  if(!input||!actionEl||savedListingUrls[key])return;
+  if(input.value.trim()){
+    input.classList.add('has-val');
+    actionEl.innerHTML=`<button class="save-url-btn" onclick="saveListing('${key}')">Save ↗</button>`;
+  } else {
+    input.classList.remove('has-val');
+    actionEl.innerHTML=`<span class="pending-icon">○</span>`;
+  }
+}
+
+async function saveListing(key){
+  const token=getCred('at_token');
+  const base=getCred('at_base');
+  const input=document.getElementById('ui-'+key);
+  const actionEl=document.getElementById('ua-'+key);
+  if(!input||!token||!base)return;
+  const url=input.value.trim();
+  if(!url)return;
+
+  const btn=actionEl.querySelector('button');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+
+  const platform=PLATFORMS.find(p=>p.replace(/\s+/g,'_')===key)||key.replace(/_/g,' ');
+  const airtablePlatform=PLAT_AT[platform]||platform.toUpperCase();
+  const priceInput=document.getElementById('up-'+key);
+  const price=priceInput?parseFloat(priceInput.value)||null:null;
+  const d=window._genMap&&window._genMap[platform];
+
+  const fields={'PLATFORM':airtablePlatform,'LISTING URL':url,'LISTING STATUS':'ACTIVE','DATE LISTED':new Date().toISOString().slice(0,10)};
+  if(d?.title)fields['LISTING TITLE']=d.title;
+  if(price!==null)fields['LIST PRICE']=price;
+  if(currentMovie?.airtableId)fields['TAPES']=[currentMovie.airtableId];
+
+  try{
+    const res=await fetch('https://api.airtable.com/v0/'+base.trim()+'/LISTINGS',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({fields})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||`Error ${res.status}`);
+    savedListingUrls[key]={url,price,id:data.id};
+    input.classList.remove('has-val');input.classList.add('saved-val');input.readOnly=true;
+    if(priceInput){priceInput.readOnly=true;priceInput.style.color='var(--muted)';}
+    actionEl.innerHTML=`<span class="check-icon">✓</span>`;
+    document.getElementById('ur-'+key)?.classList.add('saved-row');
+    updateUrlProgress();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Save ↗';}
+    alert('Failed to save listing: '+e.message);
+  }
+}
+
+function updateUrlProgress(){
+  const saved=Object.keys(savedListingUrls).length;
+  const total=generatedListings?.platforms?.length||4;
+  document.getElementById('url-progress').textContent=`${saved} of ${total} saved`;
+}
+
+function copyFromGen(platform,field,btnId){
+  const d=window._genMap&&window._genMap[platform];
+  if(!d)return;
+  let text='';
+  if(field==='title')text=d.title||'';
+  else if(field==='description')text=d.description||'';
+  else if(field==='keywords')text=(d.keywords||[]).join(', ');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    const orig=btn.textContent;
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+  });
+}
+
+// ─────────────────────────────────────────────
+// PRICING CALCULATOR
+// ─────────────────────────────────────────────
+const PRICING_PLATS = {
+  eBay:{name:'eBay',color:'#e53238',fee:(p,sb,store)=>{const r={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;return+((p+sb)*r+(p+sb)*0.0299+0.49).toFixed(2);}},
+  Etsy:{name:'Etsy',color:'#f56400',fee:(p,sb)=>+((p+sb)*0.065+(p+sb)*0.03+0.25+0.20).toFixed(2)},
+  Facebook:{name:'Facebook',color:'#1877f2',fee:(p)=>+Math.max(p*0.05,0.40).toFixed(2)},
+  Mercari:{name:'Mercari',color:'#ea3a74',fee:(p,sb)=>+(p*0.10+(p+sb)*0.029+0.30).toFixed(2)},
+};
+
+function setPricingMode(mode){
+  pricingMode=mode;
+  document.getElementById('mode-profit').classList.toggle('active',mode==='profit');
+  document.getElementById('mode-margin').classList.toggle('active',mode==='margin');
+  document.getElementById('field-profit').style.display=mode==='profit'?'':'none';
+  document.getElementById('field-margin').style.display=mode==='margin'?'':'none';
+  calcPricing();
+}
+
+function solvePrice(targetProfit,cogs,ship,pack,shipBuyer,platKey){
+  const plat=PRICING_PLATS[platKey];
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  const fixed=cogs+ship+pack;
+  let price=targetProfit+fixed+5;
+  for(let i=0;i<50;i++){
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const diff=profit-targetProfit;
+    if(Math.abs(diff)<0.001)break;
+    price+=diff*0.8;
+    if(price<0)price=0.01;
+  }
+  return Math.max(0,price);
+}
+
+function solvePriceMargin(targetPct,cogs,ship,pack,shipBuyer,platKey){
+  const plat=PRICING_PLATS[platKey];
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  const fixed=cogs+ship+pack;
+  const m=targetPct/100;
+  let price=(fixed+5)/(1-m);
+  for(let i=0;i<50;i++){
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const actual=rev>0?profit/rev:0;
+    const diff=actual-m;
+    if(Math.abs(diff)<0.0001)break;
+    price+=diff*price*0.5;
+    if(price<0)price=0.01;
+  }
+  return Math.max(0,price);
+}
+
+function calcPricing(){
+  const cogs=parseFloat(document.getElementById('p-cogs').value)||0;
+  const ship=parseFloat(document.getElementById('p-ship').value)||0;
+  const pack=parseFloat(document.getElementById('p-pack').value)||0;
+  const shipBuyer=parseFloat(document.getElementById('p-ship-buyer').value)||0;
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  let targetProfit=null,targetMargin=null;
+  if(pricingMode==='profit'){targetProfit=parseFloat(document.getElementById('p-target-profit').value);if(isNaN(targetProfit)){resetPricingResults();return;}}
+  else{targetMargin=parseFloat(document.getElementById('p-target-margin').value);if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResults();return;}}
+
+  const fixed=cogs+ship+pack;
+  const results=Object.entries(PRICING_PLATS).map(([key,plat])=>{
+    const price=pricingMode==='profit'?solvePrice(targetProfit,cogs,ship,pack,shipBuyer,key):solvePriceMargin(targetMargin,cogs,ship,pack,shipBuyer,key);
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const margin=rev>0?(profit/rev)*100:0;
+    return{key,plat,price,fees,rev,profit,margin,fixed};
+  });
+
+  const minPrice=Math.min(...results.map(r=>r.price));
+  const container=document.getElementById('pricing-results');
+  container.innerHTML=results.map(r=>{
+    const isBest=Math.abs(r.price-minPrice)<0.01;
+    const barW=Math.min(100,Math.max(0,r.margin*1.8));
+    const barColor=r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
+    return`<div class="price-card${isBest?' best':''}">
+      <div class="pc-plat" style="color:${r.plat.color}">${r.plat.name}${isBest?' · lowest':''}</div>
+      <div class="pc-price">$${r.price.toFixed(2)}</div>
+      <div class="pc-price-label">list price needed</div>
+      <button class="copy-price-btn" id="cpb-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','cpb-${r.key}')">Copy price</button>
+      <div class="pc-breakdown">
+        Fees<span>-$${r.fees.toFixed(2)}</span><br>
+        Costs<span>-$${r.fixed.toFixed(2)}</span><br>
+        Profit<span style="color:var(--green)">$${r.profit.toFixed(2)}</span><br>
+        Margin<span style="color:var(--lavender)">${r.margin.toFixed(1)}%</span>
+      </div>
+      <div class="pc-margin-bar"><div class="pc-margin-fill" style="width:${barW}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function resetPricingResults(){
+  document.getElementById('pricing-results').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center;padding:8px">Enter target and costs above</div></div>`;
+}
+
+function copyPriceVal(price,btnId){
+  navigator.clipboard.writeText(price).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy price';btn.classList.remove('copied');},2000);
+  });
+}
+
+// ─────────────────────────────────────────────
+// SESSION LOG
+// ─────────────────────────────────────────────
+function addSessionLog(entry){
+  entry.time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  sessionLog.push(entry);
+  renderSessionLog();
+}
+
+function renderSessionLog(){
+  document.getElementById('log-count-label').textContent=`${sessionLog.length} tape${sessionLog.length!==1?'s':''}`;
+  const empty=document.getElementById('log-empty');
+  const items=document.getElementById('log-items');
+  if(!sessionLog.length){empty.style.display='';items.style.display='none';return;}
+  empty.style.display='none';items.style.display='';
+  items.innerHTML=[...sessionLog].reverse().map(r=>`
+    <div class="log-item">
+      <div class="log-item-title">${r.title}</div>
+      <div class="log-item-meta">${r.year||'—'} · ${r.condition||'—'} · ${r.time}</div>
+      <div class="log-item-status ${r.status==='ok'?'log-ok':'log-err'}">${r.status==='ok'?'✓ Pushed':'✗ Failed'}</div>
+    </div>`).join('');
+}
+
+function exportSessionCSV(){
+  if(!sessionLog.length){alert('Nothing to export yet.');return;}
+  const rows=[['Title','Year','Condition','Time','Status','Airtable ID']];
+  sessionLog.forEach(e=>rows.push([`"${(e.title||'').replace(/"/g,'""')}"`,e.year||'',e.condition||'',e.time||'',e.status,e.id||'']));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`llv-session-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearSessionLog(){
+  if(sessionLog.length&&!confirm('Clear session log?'))return;
+  sessionLog=[];renderSessionLog();
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function showStatus(id,msg,state){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.textContent=msg;
+  el.className='status-msg'+(state?' '+state:'')+(msg?' visible':'');
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+// Keep scan bar always focused for scanner
+document.addEventListener('click',e=>{
+  if(!e.target.matches('input,select,textarea,button,a,.nav-item,.rtab,.ptab,.check-pill,.result-item,.tmdb-result-item')){
+    document.getElementById('global-scan').focus();
+  }
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+loadSettingsFields();
+updateCredStatus();
+document.getElementById('global-scan').focus();
+
+// Auto-open settings if no credentials
+if(!getCred('at_token')&&!getCred('claude')&&!getCred('tmdb')){
+  toggleSettings();
+}
+</script>
+</body>
+</html>

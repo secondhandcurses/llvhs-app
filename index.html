@@ -48,17 +48,19 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .settings-btn:hover{border-color:var(--border2);color:var(--text)}
 
 /* ── App layout ── */
-.app-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:48px 1fr 1fr;overflow:hidden}
+.app-body{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:64px 1fr 1fr;overflow:hidden}
 
 /* ── Sidebar ── */
-.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow:hidden}
-.nav-item{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background 0.12s;font-size:1.15rem;color:var(--muted)}
-.nav-item:hover{background:var(--bg3);color:var(--text)}
-.nav-item.active{background:var(--grape-d);color:var(--lavender)}
-.nav-item .pip{width:5px;height:5px;border-radius:50%;background:var(--grape);position:absolute;top:5px;right:5px}
-.nav-tooltip{position:absolute;left:42px;top:50%;transform:translateY(-50%);background:var(--bg3);border:1px solid var(--border2);padding:4px 10px;font-family:var(--mono);font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text);white-space:nowrap;pointer-events:none;z-index:100;display:none}
-.nav-item:hover .nav-tooltip{display:block}
-.nav-divider{width:24px;height:1px;background:var(--border);margin:3px 0;flex-shrink:0}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:2px;overflow:hidden;width:64px}
+.nav-item{width:56px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background 0.12s;gap:1px}
+.nav-item:hover{background:var(--bg3)}
+.nav-item.active{background:var(--grape-d)}
+.nav-item .pip{width:5px;height:5px;border-radius:50%;background:var(--grape);position:absolute;top:5px;right:8px}
+.nav-item-label{font-family:var(--mono);font-size:0.52rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);line-height:1;text-align:center}
+.nav-item.active .nav-item-label{color:var(--lavender)}
+.nav-item:hover .nav-item-label{color:var(--text)}
+.nav-tooltip{display:none}
+.nav-divider{width:36px;height:1px;background:var(--border);margin:3px 0;flex-shrink:0}
 
 /* ── Center panel ── */
 .center{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
@@ -69,7 +71,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .pip-step.done{color:var(--grape);background:var(--grape-d)}
 .pip-step.active{color:#fff;background:var(--grape)}
 .pip-arrow{font-size:0.6rem;color:var(--border2)}
-.panel-body{flex:1;overflow-y:auto;padding:16px}
+.panel-body{flex:1;overflow-y:auto;padding:12px 14px}
 .panel-body::-webkit-scrollbar{width:3px}
 .panel-body::-webkit-scrollbar-thumb{background:var(--border2)}
 
@@ -79,7 +81,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .rtab{font-family:var(--mono);font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;padding:8px 12px;border:none;border-bottom:1.5px solid transparent;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;margin-bottom:-1px;transition:color 0.12s}
 .rtab:hover{color:var(--text)}
 .rtab.active{color:var(--lavender);border-bottom-color:var(--lavender);background:var(--bg2)}
-.right-body{flex:1;overflow-y:auto;padding:16px}
+.right-body{flex:1;overflow-y:auto;padding:12px 14px}
 .right-body::-webkit-scrollbar{width:3px}
 .right-body::-webkit-scrollbar-thumb{background:var(--border2)}
 
@@ -110,7 +112,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .settings-saved.visible{display:block}
 
 /* ── Shared UI components ── */
-.field{margin-bottom:12px}
+.field{margin-bottom:8px}
 .field:last-child{margin-bottom:0}
 .field label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
 .field label span{font-size:0.58rem;letter-spacing:0;text-transform:none;color:var(--dim)}
@@ -327,31 +329,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="nav-item active" data-panel="intake" onclick="switchPanel('intake',this)">
-      ◈
-      <div class="nav-tooltip">Intake</div>
+      <div class="nav-item-label">Intake</div>
       <div class="pip"></div>
     </div>
     <div class="nav-item" data-panel="pricing" onclick="switchPanel('pricing',this)">
-      ◎
-      <div class="nav-tooltip">Pricing</div>
-    </div>
-    <div class="nav-item" data-panel="listing" onclick="switchPanel('listing',this)">
-      ◻
-      <div class="nav-tooltip">Listing writer</div>
+      <div class="nav-item-label">Pricing</div>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-item" data-panel="lots" onclick="switchPanel('lots',this)">
-      ⊞
-      <div class="nav-tooltip">Lot builder</div>
+      <div class="nav-item-label">Lots</div>
     </div>
     <div class="nav-item" data-panel="labels" onclick="switchPanel('labels',this)">
-      ▦
-      <div class="nav-tooltip">Label printer</div>
+      <div class="nav-item-label">Labels</div>
     </div>
     <div class="nav-divider"></div>
     <div class="nav-item" data-panel="log" onclick="switchPanel('log',this)">
-      ≡
-      <div class="nav-tooltip">Session log</div>
+      <div class="nav-item-label">Log</div>
     </div>
   </nav>
 
@@ -631,9 +624,18 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
     <!-- Listing tab -->
     <div class="right-body" id="rtab-listing" style="display:none">
+      <!-- Load from Airtable -->
+      <div style="margin-bottom:12px">
+        <div class="section-label">Load tape from Airtable</div>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="listing-at-search" placeholder="Search catalogued tapes…" style="flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:0.82rem;padding:5px 8px;outline:none;border-radius:0" oninput="onListingATSearch()">
+        </div>
+        <div class="results-list" id="listing-at-results" style="margin-top:4px"></div>
+      </div>
+
       <div class="section-label">Platform</div>
       <div class="plat-tabs" id="plat-tabs">
-        <button class="ptab active" data-plat="all">All platforms</button>
+        <button class="ptab active" data-plat="all">All</button>
         <button class="ptab" data-plat="eBay">eBay</button>
         <button class="ptab" data-plat="Etsy">Etsy</button>
         <button class="ptab" data-plat="Facebook Marketplace">Facebook</button>
@@ -646,16 +648,59 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="section-label">Save listing URLs</div>
         <div class="url-rows" id="listing-url-rows"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-          <div style="font-family:var(--mono);font-size:0.54rem;color:var(--dim)" id="url-progress">0 of 4 saved</div>
+          <div style="font-family:var(--mono);font-size:0.62rem;color:var(--dim)" id="url-progress">0 of 4 saved</div>
         </div>
       </div>
     </div>
 
-    <!-- Pricing right tab (mirrors center but compact) -->
+    <!-- Pricing right tab — full calculator -->
     <div class="right-body" id="rtab-pricing-right" style="display:none">
-      <div class="empty-state">
-        <div class="empty-icon">◎</div>
-        <div class="empty-label">Switch to the Pricing panel<br>in the sidebar for the full calculator</div>
+      <div class="section-label">Target</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-profit-r" onclick="setPricingModeR('profit')">Target profit ($)</button>
+        <button class="mode-btn" id="mode-margin-r" onclick="setPricingModeR('margin')">Target margin (%)</button>
+      </div>
+      <div class="field" id="field-profit-r">
+        <label>Target profit</label>
+        <div class="price-wrap"><input type="number" id="pr-target-profit" placeholder="8.00" step="0.01" min="0" oninput="calcPricingR()"></div>
+      </div>
+      <div class="field" id="field-margin-r" style="display:none">
+        <label>Target margin %</label>
+        <input type="number" id="pr-target-margin" placeholder="45" step="1" min="0" max="100" oninput="calcPricingR()" style="padding-right:24px">
+      </div>
+      <div class="divider"></div>
+      <div class="section-label">Costs</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Cost of goods</label>
+          <div class="price-wrap"><input type="number" id="pr-cogs" placeholder="0.00" step="0.01" min="0" oninput="calcPricingR()"></div>
+        </div>
+        <div class="field">
+          <label>Pirate Ship</label>
+          <div class="price-wrap"><input type="number" id="pr-ship" placeholder="4.50" step="0.01" min="0" oninput="calcPricingR()"></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Packaging</label>
+          <div class="price-wrap"><input type="number" id="pr-pack" placeholder="0.40" step="0.01" min="0" oninput="calcPricingR()"></div>
+        </div>
+        <div class="field">
+          <label>Buyer ships</label>
+          <div class="price-wrap"><input type="number" id="pr-ship-buyer" placeholder="0.00" step="0.01" min="0" oninput="calcPricingR()"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>eBay store tier</label>
+        <select id="pr-ebay-store" onchange="calcPricingR()">
+          <option value="no">No store (13.25%)</option>
+          <option value="basic">Basic store (12.35%)</option>
+          <option value="premium">Premium store (11.5%)</option>
+        </select>
+      </div>
+      <div class="section-label" style="margin-top:12px">Required list price</div>
+      <div class="price-results-grid" id="pricing-results-r">
+        <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>
       </div>
     </div>
 
@@ -1182,10 +1227,10 @@ async function generateListing(){
   ].filter(Boolean).join('\n');
 
   const guide = {
-    'eBay':'eBay: title max 80 chars, keyword-dense. Description: structured, condition prominent, shipping note. 8-12 SEO keywords.',
-    'Etsy':'Etsy: title up to 140 chars, nostalgia-driven. Description: storytelling tone, collectibility. 13 tags.',
-    'Facebook Marketplace':'Facebook: title under 60 chars, casual. Description: short, lead with condition. 8+ keywords still required.',
-    'Mercari':'Mercari: title max 40 chars. Brief honest description. 8+ hashtag keywords.'
+    'eBay':'eBay: title max 80 chars, keyword-dense. Description: structured, condition prominent. MUST include 8-12 keywords[].',
+    'Etsy':'Etsy: title up to 140 chars, nostalgia-driven. Description: storytelling tone. MUST include exactly 13 keywords[] — this is critical for Etsy SEO, do not skip.',
+    'Facebook Marketplace':'Facebook: title under 60 chars, casual. Description: short and honest. MUST include 8-10 keywords[].',
+    'Mercari':'Mercari: title max 40 chars. Brief honest description. MUST include 8-10 keywords[].'
   };
 
   const isMulti = currentListingPlatform==='all';
@@ -1218,7 +1263,6 @@ function renderListingOutput(){
   const { platforms } = generatedListings;
   const container = document.getElementById('listing-output');
 
-  // Tabs for result sections
   const tabs = platforms.map((p,i)=>`<button class="ptab${i===0?' active':''}" onclick="switchListingResultTab('${p.replace(/\s+/g,'_')}',this)">${p==='Facebook Marketplace'?'Facebook':p}</button>`).join('');
   const sections = platforms.map((p,i)=>{
     const key=p.replace(/\s+/g,'_');
@@ -1226,6 +1270,9 @@ function renderListingOutput(){
     if(!d) return `<div id="lrs-${key}" style="${i>0?'display:none':''}">${esc('No data')}</div>`;
     const kws=(d.keywords||[]).map(k=>`<span class="kw">${esc(k)}</span>`).join('');
     return `<div id="lrs-${key}" style="${i>0?'display:none':''}">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button class="copy-inline-btn" id="ca-${key}" onclick="copyAll('${p}','ca-${key}')">Copy all</button>
+      </div>
       <div class="result-block">
         <div class="result-label">Title <button class="copy-inline-btn" id="ct-${key}" onclick="copyFromGen('${p}','title','ct-${key}')">Copy</button></div>
         <div class="result-text title-field">${esc(d.title||'')}</div>
@@ -1235,13 +1282,12 @@ function renderListingOutput(){
         <div class="result-label">Description <button class="copy-inline-btn" id="cd-${key}" onclick="copyFromGen('${p}','description','cd-${key}')">Copy</button></div>
         <div class="result-text">${esc(d.description||'')}</div>
       </div>
-      ${kws?`<div class="result-block"><div class="result-label">Keywords <button class="copy-inline-btn" id="ck-${key}" onclick="copyFromGen('${p}','keywords','ck-${key}')">Copy all</button></div><div class="kw-wrap">${kws}</div></div>`:''}
+      ${kws?`<div class="result-block"><div class="result-label">Keywords <button class="copy-inline-btn" id="ck-${key}" onclick="copyFromGen('${p}','keywords','ck-${key}')">Copy all</button></div><div class="kw-wrap">${kws}</div></div>`:'<div class="result-block"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--red)">No keywords returned — try regenerating</div></div>'}
     </div>`;
   }).join('');
 
   container.innerHTML = `<div class="plat-tabs" style="margin-bottom:8px">${tabs}</div>${sections}`;
 
-  // Build URL push rows
   const urlRows = document.getElementById('listing-url-rows');
   urlRows.innerHTML = platforms.map(p=>{
     const key=p.replace(/\s+/g,'_');
@@ -1256,6 +1302,158 @@ function renderListingOutput(){
 
   document.getElementById('url-push-section').style.display='';
   updateUrlProgress();
+}
+
+function copyAll(platform, btnId){
+  const d=window._genMap&&window._genMap[platform];
+  if(!d)return;
+  const text=[d.title||'','\n\n',d.description||'',d.keywords?.length?'\n\nKeywords: '+d.keywords.join(', '):''  ].join('');
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(!btn)return;
+    const orig=btn.textContent;
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+  });
+}
+
+// ── Listing tab — load tape from Airtable ──
+let listingATSearchTimeout = null;
+
+function onListingATSearch(){
+  clearTimeout(listingATSearchTimeout);
+  const q = document.getElementById('listing-at-search').value.trim();
+  listingATSearchTimeout = setTimeout(()=>searchListingAT(q), 400);
+}
+
+async function searchListingAT(q){
+  const token=getCred('at_token');
+  const base=getCred('at_base');
+  if(!token||!base) return;
+  const el=document.getElementById('listing-at-results');
+  el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)"><span class="spinner">◌</span> Searching…</div>`;
+  el.classList.add('visible');
+  try{
+    const qSafe=(q||'').replace(/"/g,'\\"');
+    const search=q?`OR(SEARCH(LOWER("${qSafe}"),LOWER({TITLE})),SEARCH(LOWER("${qSafe}"),LOWER({CAST})),SEARCH(LOWER("${qSafe}"),LOWER({DIRECTOR})))`:'1';
+    const formula=encodeURIComponent(`AND(${search})`);
+    const url=`https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}?filterByFormula=${formula}&maxRecords=8&fields[]=TITLE&fields[]=YEAR&fields[]=CONDITION&fields[]=GENRE&fields[]=DIRECTOR&fields[]=CAST&fields[]=SYNOPSIS&fields[]=NOTES&fields[]=SPECIAL+FEATURES&fields[]=LABEL+%2F+STUDIO&fields[]=ASKING+PRICE`;
+    const res=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error');
+    if(!data.records?.length){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:var(--muted)">No tapes found</div>`;return;}
+    window._listingATMap={};
+    data.records.forEach(r=>{window._listingATMap[r.id]=r;});
+    el.innerHTML=data.records.map(r=>{
+      const f=r.fields;
+      return `<div class="result-item" onclick="loadListingFromAT('${r.id}')">
+        <div>
+          <div class="ri-title">${f.TITLE||'—'}</div>
+          <div class="ri-meta">
+            ${f.YEAR?`<span class="ri-chip">${f.YEAR}</span>`:''}
+            ${f.CONDITION?`<span class="ri-chip">${f.CONDITION}</span>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML=`<div style="padding:6px 9px;font-family:var(--mono);font-size:0.65rem;color:#e88">Error: ${e.message}</div>`;}
+}
+
+function loadListingFromAT(id){
+  const record=window._listingATMap&&window._listingATMap[id];
+  if(!record)return;
+  const f=record.fields;
+  // Build currentMovie-like object from Airtable record
+  currentMovie={
+    title:f.TITLE||'',
+    year:f.YEAR?String(f.YEAR):'',
+    genre:f.GENRE||'',
+    director:f.DIRECTOR||'',
+    cast:f.CAST||'',
+    synopsis:f.SYNOPSIS||'',
+    overview:f.SYNOPSIS||'',
+    airtableId:record.id,
+  };
+  // Populate intake form fields too
+  if(f.CONDITION)document.getElementById('f-condition').value=f.CONDITION;
+  if(f.GENRE)document.getElementById('f-genre').value=f.GENRE;
+  if(f['ASKING PRICE'])document.getElementById('f-price').value=f['ASKING PRICE'];
+  document.getElementById('tape-big-title').textContent=f.TITLE||'—';
+  document.getElementById('tape-sub').textContent=[f.YEAR,f.GENRE,f.DIRECTOR?`Dir. ${f.DIRECTOR}`:''].filter(Boolean).join(' · ');
+  document.getElementById('intake-empty').style.display='none';
+  document.getElementById('intake-record').style.display='';
+
+  // Clear search
+  document.getElementById('listing-at-search').value='';
+  document.getElementById('listing-at-results').classList.remove('visible');
+  document.getElementById('listing-at-results').innerHTML='';
+
+  // Regenerate listing status
+  document.getElementById('listing-output').innerHTML='';
+  document.getElementById('url-push-section').style.display='none';
+  savedListingUrls={};
+  showStatus('listing-status',`Loaded: ${f.TITLE} — ready to generate`,'success');
+  setTimeout(()=>document.getElementById('listing-status').className='status-msg',3000);
+}
+
+// ── Right panel pricing calculator ──
+let pricingModeR = 'profit';
+
+function setPricingModeR(mode){
+  pricingModeR=mode;
+  document.getElementById('mode-profit-r').classList.toggle('active',mode==='profit');
+  document.getElementById('mode-margin-r').classList.toggle('active',mode==='margin');
+  document.getElementById('field-profit-r').style.display=mode==='profit'?'':'none';
+  document.getElementById('field-margin-r').style.display=mode==='margin'?'':'none';
+  calcPricingR();
+}
+
+function calcPricingR(){
+  const cogs=parseFloat(document.getElementById('pr-cogs').value)||0;
+  const ship=parseFloat(document.getElementById('pr-ship').value)||0;
+  const pack=parseFloat(document.getElementById('pr-pack').value)||0;
+  const shipBuyer=parseFloat(document.getElementById('pr-ship-buyer').value)||0;
+  const store=document.getElementById('pr-ebay-store')?.value||'no';
+  let targetProfit=null,targetMargin=null;
+  if(pricingModeR==='profit'){targetProfit=parseFloat(document.getElementById('pr-target-profit').value);if(isNaN(targetProfit)){resetPricingResultsR();return;}}
+  else{targetMargin=parseFloat(document.getElementById('pr-target-margin').value);if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResultsR();return;}}
+
+  const fixed=cogs+ship+pack;
+  const results=Object.entries(PRICING_PLATS).map(([key,plat])=>{
+    const price=pricingModeR==='profit'
+      ?solvePrice(targetProfit,cogs,ship,pack,shipBuyer,key)
+      :solvePriceMargin(targetMargin,cogs,ship,pack,shipBuyer,key);
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const margin=rev>0?(profit/rev)*100:0;
+    return{key,plat,price,fees,rev,profit,margin,fixed};
+  });
+
+  const minPrice=Math.min(...results.map(r=>r.price));
+  const container=document.getElementById('pricing-results-r');
+  container.innerHTML=results.map(r=>{
+    const isBest=Math.abs(r.price-minPrice)<0.01;
+    const barW=Math.min(100,Math.max(0,r.margin*1.8));
+    const barColor=r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
+    return`<div class="price-card${isBest?' best':''}">
+      <div class="pc-plat" style="color:${r.plat.color}">${r.plat.name}${isBest?' · lowest':''}</div>
+      <div class="pc-price">$${r.price.toFixed(2)}</div>
+      <div class="pc-price-label">list price needed</div>
+      <button class="copy-price-btn" id="cpbr-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','cpbr-${r.key}')">Copy price</button>
+      <div class="pc-breakdown">
+        Fees<span>-$${r.fees.toFixed(2)}</span><br>
+        Costs<span>-$${r.fixed.toFixed(2)}</span><br>
+        Profit<span style="color:var(--green)">$${r.profit.toFixed(2)}</span><br>
+        Margin<span style="color:var(--lavender)">${r.margin.toFixed(1)}%</span>
+      </div>
+      <div class="pc-margin-bar"><div class="pc-margin-fill" style="width:${barW}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function resetPricingResultsR(){
+  document.getElementById('pricing-results-r').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>`;
 }
 
 function switchListingResultTab(key,btn){

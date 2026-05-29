@@ -1591,17 +1591,42 @@ function calcPricingR(){
   const pack=parseFloat(document.getElementById('pr-pack').value)||0;
   const shipBuyer=parseFloat(document.getElementById('pr-ship-buyer').value)||0;
   const store=document.getElementById('pr-ebay-store')?.value||'no';
-  const fixed=cogs+ship+pack;
+  let targetProfit=null,targetMargin=null;
+  if(pricingModeR==='profit'){targetProfit=parseFloat(document.getElementById('pr-target-profit').value);if(isNaN(targetProfit)){resetPricingResultsR();return;}}
+  else{targetMargin=parseFloat(document.getElementById('pr-target-margin').value);if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResultsR();return;}}
 
-  if(pricingModeR==='profit'){
-    const targetProfit=parseFloat(document.getElementById('pr-target-profit').value);
-    if(isNaN(targetProfit)){resetPricingResultsR();return;}
-    renderPricingCards(calcPricingResults(targetProfit,null,fixed,shipBuyer,store),'pricing-results-r','cpbr');
-  } else {
-    const targetMargin=parseFloat(document.getElementById('pr-target-margin').value);
-    if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResultsR();return;}
-    renderPricingCards(calcPricingResults(null,targetMargin/100,fixed,shipBuyer,store),'pricing-results-r','cpbr');
-  }
+  const fixed=cogs+ship+pack;
+  const results=Object.entries(PRICING_PLATS).map(([key,plat])=>{
+    const price=pricingModeR==='profit'
+      ?solvePrice(targetProfit,cogs,ship,pack,shipBuyer,key)
+      :solvePriceMargin(targetMargin,cogs,ship,pack,shipBuyer,key);
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const margin=rev>0?(profit/rev)*100:0;
+    return{key,plat,price,fees,rev,profit,margin,fixed};
+  });
+
+  const minPrice=Math.min(...results.map(r=>r.price));
+  const container=document.getElementById('pricing-results-r');
+  container.innerHTML=results.map(r=>{
+    const isBest=Math.abs(r.price-minPrice)<0.01;
+    const barW=Math.min(100,Math.max(0,r.margin*1.8));
+    const barColor=r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
+    return`<div class="price-card${isBest?' best':''}">
+      <div class="pc-plat" style="color:${r.plat.color}">${r.plat.name}${isBest?' · lowest':''}</div>
+      <div class="pc-price">$${r.price.toFixed(2)}</div>
+      <div class="pc-price-label">list price needed</div>
+      <button class="copy-price-btn" id="cpbr-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','cpbr-${r.key}')">Copy price</button>
+      <div class="pc-breakdown">
+        Fees<span>-$${r.fees.toFixed(2)}</span><br>
+        Costs<span>-$${r.fixed.toFixed(2)}</span><br>
+        Profit<span style="color:var(--green)">$${r.profit.toFixed(2)}</span><br>
+        Margin<span style="color:var(--lavender)">${r.margin.toFixed(1)}%</span>
+      </div>
+      <div class="pc-margin-bar"><div class="pc-margin-fill" style="width:${barW}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join('');
 }
 
 function resetPricingResultsR(){
@@ -1694,58 +1719,10 @@ function copyFromGen(platform,field,btnId){
 // PRICING CALCULATOR
 // ─────────────────────────────────────────────
 const PRICING_PLATS = {
-  eBay:{name:'eBay',color:'#e53238',
-    solve:(target,fixed,shipBuyer,store)=>{
-      // eBay fee = rate*(price+shipBuyer) + 0.30 (no per-transaction fixed fee for most categories)
-      // revenue = price + shipBuyer
-      // profit = revenue - fee - fixed = target
-      // price + shipBuyer - rate*(price+shipBuyer) - fixed = target
-      // (price+shipBuyer)*(1-rate) = target + fixed
-      // price = (target+fixed)/(1-rate) - shipBuyer
-      const rate={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;
-      return Math.max(0,(target+fixed)/(1-rate)-shipBuyer);
-    },
-    fee:(price,shipBuyer,store)=>{
-      const rate={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;
-      return+((price+shipBuyer)*rate).toFixed(2);
-    }
-  },
-  Etsy:{name:'Etsy',color:'#f56400',
-    solve:(target,fixed,shipBuyer)=>{
-      // Etsy: listing fee $0.20 flat, transaction 6.5% of (price+shipBuyer), payment 3%+$0.25
-      // profit = price + shipBuyer - 0.065*(price+shipBuyer) - 0.03*(price+shipBuyer) - 0.25 - 0.20 - fixed = target
-      // (price+shipBuyer)*(1-0.095) = target + fixed + 0.45
-      // price = (target+fixed+0.45)/0.905 - shipBuyer
-      return Math.max(0,(target+fixed+0.45)/0.905-shipBuyer);
-    },
-    fee:(price,shipBuyer)=>{
-      return+((price+shipBuyer)*0.065+(price+shipBuyer)*0.03+0.25+0.20).toFixed(2);
-    }
-  },
-  Facebook:{name:'Facebook',color:'#1877f2',
-    solve:(target,fixed,shipBuyer)=>{
-      // Facebook: 5% of price (min $0.40), no payment processing fee passed to seller
-      // profit = price - 0.05*price - fixed = target (shipBuyer is separate, not subject to fee)
-      // price*0.95 = target + fixed
-      // price = (target+fixed)/0.95
-      return Math.max(0,(target+fixed)/0.95);
-    },
-    fee:(price)=>{
-      return+Math.max(price*0.05,0.40).toFixed(2);
-    }
-  },
-  Mercari:{name:'Mercari',color:'#ea3a74',
-    solve:(target,fixed,shipBuyer)=>{
-      // Mercari: 10% selling fee on price, 2.9%+$0.30 payment processing on (price+shipBuyer)
-      // profit = price + shipBuyer - 0.10*price - 0.029*(price+shipBuyer) - 0.30 - fixed = target
-      // price*(1-0.10-0.029) + shipBuyer*(1-0.029) - 0.30 - fixed = target
-      // price*0.871 = target + fixed + 0.30 - shipBuyer*0.971
-      return Math.max(0,(target+fixed+0.30-shipBuyer*0.971)/0.871);
-    },
-    fee:(price,shipBuyer)=>{
-      return+(price*0.10+(price+shipBuyer)*0.029+0.30).toFixed(2);
-    }
-  },
+  eBay:{name:'eBay',color:'#e53238',fee:(p,sb,store)=>{const r={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;return+((p+sb)*r+(p+sb)*0.0299+0.49).toFixed(2);}},
+  Etsy:{name:'Etsy',color:'#f56400',fee:(p,sb)=>+((p+sb)*0.065+(p+sb)*0.03+0.25+0.20).toFixed(2)},
+  Facebook:{name:'Facebook',color:'#1877f2',fee:(p)=>+Math.max(p*0.05,0.40).toFixed(2)},
+  Mercari:{name:'Mercari',color:'#ea3a74',fee:(p,sb)=>+(p*0.10+(p+sb)*0.029+0.30).toFixed(2)},
 };
 
 function setPricingMode(mode){
@@ -1757,50 +1734,73 @@ function setPricingMode(mode){
   calcPricing();
 }
 
-function calcPricingResults(targetProfit, targetMargin, fixed, shipBuyer, store){
-  return Object.entries(PRICING_PLATS).map(([key,plat])=>{
-    let price;
-    if(targetProfit !== null){
-      price = plat.solve(targetProfit, fixed, shipBuyer, store);
-    } else {
-      // Margin mode: solve algebraically per platform
-      // margin = profit/revenue = (revenue - fees - fixed) / revenue = targetMargin
-      // revenue*(1-targetMargin) = fees + fixed
-      // Each platform has different fee structure so we use a simple iterative
-      // approach just for margin mode (converges quickly, 10 iterations max)
-      const m = targetMargin;
-      price = (fixed + 5) / (1 - m); // initial estimate
-      for(let i=0; i<20; i++){
-        const fees = plat.fee(price, shipBuyer, store);
-        const rev = price + shipBuyer;
-        const profit = rev - fees - fixed;
-        const actualMargin = rev > 0 ? profit/rev : 0;
-        const diff = actualMargin - m;
-        if(Math.abs(diff) < 0.00001) break;
-        price += diff * price * 0.5;
-        if(price < 0) price = 0.01;
-      }
-    }
-    const fees = plat.fee(price, shipBuyer, store);
-    const rev = price + shipBuyer;
-    const profit = rev - fees - fixed;
-    const margin = rev > 0 ? (profit/rev)*100 : 0;
-    return {key, plat, price, fees, rev, profit, margin, fixed};
-  });
+function solvePrice(targetProfit,cogs,ship,pack,shipBuyer,platKey){
+  const plat=PRICING_PLATS[platKey];
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  const fixed=cogs+ship+pack;
+  let price=targetProfit+fixed+5;
+  for(let i=0;i<50;i++){
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const diff=profit-targetProfit;
+    if(Math.abs(diff)<0.001)break;
+    price+=diff*0.8;
+    if(price<0)price=0.01;
+  }
+  return Math.max(0,price);
 }
 
-function renderPricingCards(results, containerId, btnPrefix){
-  const minPrice = Math.min(...results.map(r=>r.price));
-  const container = document.getElementById(containerId);
-  container.innerHTML = results.map(r=>{
-    const isBest = Math.abs(r.price-minPrice)<0.01;
-    const barW = Math.min(100,Math.max(0,r.margin*1.8));
-    const barColor = r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
+function solvePriceMargin(targetPct,cogs,ship,pack,shipBuyer,platKey){
+  const plat=PRICING_PLATS[platKey];
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  const fixed=cogs+ship+pack;
+  const m=targetPct/100;
+  let price=(fixed+5)/(1-m);
+  for(let i=0;i<50;i++){
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const actual=rev>0?profit/rev:0;
+    const diff=actual-m;
+    if(Math.abs(diff)<0.0001)break;
+    price+=diff*price*0.5;
+    if(price<0)price=0.01;
+  }
+  return Math.max(0,price);
+}
+
+function calcPricing(){
+  const cogs=parseFloat(document.getElementById('p-cogs').value)||0;
+  const ship=parseFloat(document.getElementById('p-ship').value)||0;
+  const pack=parseFloat(document.getElementById('p-pack').value)||0;
+  const shipBuyer=parseFloat(document.getElementById('p-ship-buyer').value)||0;
+  const store=document.getElementById('p-ebay-store')?.value||'no';
+  let targetProfit=null,targetMargin=null;
+  if(pricingMode==='profit'){targetProfit=parseFloat(document.getElementById('p-target-profit').value);if(isNaN(targetProfit)){resetPricingResults();return;}}
+  else{targetMargin=parseFloat(document.getElementById('p-target-margin').value);if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResults();return;}}
+
+  const fixed=cogs+ship+pack;
+  const results=Object.entries(PRICING_PLATS).map(([key,plat])=>{
+    const price=pricingMode==='profit'?solvePrice(targetProfit,cogs,ship,pack,shipBuyer,key):solvePriceMargin(targetMargin,cogs,ship,pack,shipBuyer,key);
+    const fees=plat.fee(price,shipBuyer,store);
+    const rev=price+shipBuyer;
+    const profit=rev-fees-fixed;
+    const margin=rev>0?(profit/rev)*100:0;
+    return{key,plat,price,fees,rev,profit,margin,fixed};
+  });
+
+  const minPrice=Math.min(...results.map(r=>r.price));
+  const container=document.getElementById('pricing-results');
+  container.innerHTML=results.map(r=>{
+    const isBest=Math.abs(r.price-minPrice)<0.01;
+    const barW=Math.min(100,Math.max(0,r.margin*1.8));
+    const barColor=r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
     return`<div class="price-card${isBest?' best':''}">
       <div class="pc-plat" style="color:${r.plat.color}">${r.plat.name}${isBest?' · lowest':''}</div>
       <div class="pc-price">$${r.price.toFixed(2)}</div>
       <div class="pc-price-label">list price needed</div>
-      <button class="copy-price-btn" id="${btnPrefix}-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','${btnPrefix}-${r.key}')">Copy price</button>
+      <button class="copy-price-btn" id="cpb-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','cpb-${r.key}')">Copy price</button>
       <div class="pc-breakdown">
         Fees<span>-$${r.fees.toFixed(2)}</span><br>
         Costs<span>-$${r.fixed.toFixed(2)}</span><br>
@@ -1810,41 +1810,6 @@ function renderPricingCards(results, containerId, btnPrefix){
       <div class="pc-margin-bar"><div class="pc-margin-fill" style="width:${barW}%;background:${barColor}"></div></div>
     </div>`;
   }).join('');
-}
-
-function resetPricingResults(){
-  document.getElementById('pricing-results').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>`;
-}
-  const cogs=parseFloat(document.getElementById('p-cogs').value)||0;
-  const ship=parseFloat(document.getElementById('p-ship').value)||0;
-  const pack=parseFloat(document.getElementById('p-pack').value)||0;
-  const shipBuyer=parseFloat(document.getElementById('p-ship-buyer').value)||0;
-  const store=document.getElementById('p-ebay-store')?.value||'no';
-  const fixed=cogs+ship+pack;
-
-  let targetProfit=null;
-  if(pricingMode==='profit'){
-    targetProfit=parseFloat(document.getElementById('p-target-profit').value);
-    if(isNaN(targetProfit)){resetPricingResults();return;}
-  } else {
-    const targetMargin=parseFloat(document.getElementById('p-target-margin').value);
-    if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResults();return;}
-    // For margin mode, we'll iterate once using a representative price estimate
-    // Use eBay as reference: price = (fixed+shipBuyer*m)/(1-m-rate) approximately
-    // Simpler: solve for profit that gives the target margin at a guessed price,
-    // then solve algebraically. We'll use the margin definition differently:
-    // margin = profit / revenue; revenue = price + shipBuyer
-    // We solve per platform using their algebraic solve with an estimated profit
-    // derived from fixed costs and margin target
-    const m = targetMargin/100;
-    // Estimate: revenue ≈ fixed/(1-m), profit ≈ revenue*m - shipBuyer*m... approximate
-    // Simpler: just solve price directly per platform for margin target
-    const results = calcPricingResults(null, targetMargin/100, fixed, shipBuyer, store);
-    renderPricingCards(results, 'pricing-results', 'cpb');
-    return;
-  }
-  const results = calcPricingResults(targetProfit, null, fixed, shipBuyer, store);
-  renderPricingCards(results, 'pricing-results', 'cpb');
 }
 
 function resetPricingResults(){

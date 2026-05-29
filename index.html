@@ -483,52 +483,44 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <!-- PRICING PANEL (center view) -->
     <div class="tool-panel" id="panel-pricing">
       <div class="panel-body">
-        <div class="section-label">Target</div>
-        <div class="mode-toggle">
-          <button class="mode-btn active" id="mode-profit" onclick="setPricingMode('profit')">Target profit ($)</button>
-          <button class="mode-btn" id="mode-margin" onclick="setPricingMode('margin')">Target margin (%)</button>
-        </div>
-        <div class="field" id="field-profit">
-          <label>Target profit</label>
-          <div class="price-wrap"><input type="number" id="p-target-profit" placeholder="8.00" step="0.01" min="0" oninput="calcPricing()"></div>
-        </div>
-        <div class="field" id="field-margin" style="display:none">
-          <label>Target margin %</label>
-          <input type="number" id="p-target-margin" placeholder="45" step="1" min="0" max="100" oninput="calcPricing()" style="padding-right:24px">
-        </div>
-        <div class="divider"></div>
-        <div class="section-label">Costs</div>
+        <div class="section-label">List price</div>
         <div class="field-row">
+          <div class="field">
+            <label>Your list price *</label>
+            <div class="price-wrap"><input type="number" id="p-list-price" placeholder="0.00" step="0.01" min="0" oninput="calcPricing()"></div>
+          </div>
           <div class="field">
             <label>Cost of goods <span>(from tape)</span></label>
             <div class="price-wrap"><input type="number" id="p-cogs" placeholder="0.00" step="0.01" min="0" oninput="calcPricing()"></div>
           </div>
+        </div>
+        <div class="field-row">
           <div class="field">
             <label>Pirate Ship label</label>
             <div class="price-wrap"><input type="number" id="p-ship" placeholder="4.50" step="0.01" min="0" oninput="calcPricing()"></div>
           </div>
-        </div>
-        <div class="field-row">
           <div class="field">
             <label>Packaging</label>
             <div class="price-wrap"><input type="number" id="p-pack" placeholder="0.40" step="0.01" min="0" oninput="calcPricing()"></div>
           </div>
+        </div>
+        <div class="field-row">
           <div class="field">
             <label>Buyer pays shipping</label>
             <div class="price-wrap"><input type="number" id="p-ship-buyer" placeholder="0.00" step="0.01" min="0" oninput="calcPricing()"></div>
           </div>
+          <div class="field">
+            <label>eBay store tier</label>
+            <select id="p-ebay-store" onchange="calcPricing()">
+              <option value="no">No store (13.25%)</option>
+              <option value="basic">Basic store (12.35%)</option>
+              <option value="premium">Premium store (11.5%)</option>
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label>eBay store tier</label>
-          <select id="p-ebay-store" onchange="calcPricing()">
-            <option value="no">No store (13.25%)</option>
-            <option value="basic">Basic store (12.35%)</option>
-            <option value="premium">Premium store (11.5%)</option>
-          </select>
-        </div>
-        <div class="section-label" style="margin-top:12px">Required list price</div>
+        <div class="section-label" style="margin-top:4px">Fee breakdown</div>
         <div class="price-results-grid" id="pricing-results">
-          <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center;padding:8px">Enter target and costs above</div></div>
+          <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center;padding:8px">Enter a list price above</div></div>
         </div>
       </div>
     </div>
@@ -834,54 +826,46 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
     </div>
 
-    <!-- Pricing right tab — full calculator -->
+    <!-- Pricing right tab — fee calculator -->
     <div class="right-body" id="rtab-pricing-right" style="display:none">
-      <div class="section-label">Target</div>
-      <div class="mode-toggle">
-        <button class="mode-btn active" id="mode-profit-r" onclick="setPricingModeR('profit')">Target profit ($)</button>
-        <button class="mode-btn" id="mode-margin-r" onclick="setPricingModeR('margin')">Target margin (%)</button>
-      </div>
-      <div class="field" id="field-profit-r">
-        <label>Target profit</label>
-        <div class="price-wrap"><input type="number" id="pr-target-profit" placeholder="8.00" step="0.01" min="0" oninput="calcPricingR()"></div>
-      </div>
-      <div class="field" id="field-margin-r" style="display:none">
-        <label>Target margin %</label>
-        <input type="number" id="pr-target-margin" placeholder="45" step="1" min="0" max="100" oninput="calcPricingR()" style="padding-right:24px">
-      </div>
-      <div class="divider"></div>
-      <div class="section-label">Costs</div>
+      <div class="section-label">Fee calculator</div>
       <div class="field-row">
+        <div class="field">
+          <label>List price *</label>
+          <div class="price-wrap"><input type="number" id="pr-list-price" placeholder="0.00" step="0.01" min="0" oninput="calcPricingR()"></div>
+        </div>
         <div class="field">
           <label>Cost of goods</label>
           <div class="price-wrap"><input type="number" id="pr-cogs" placeholder="0.00" step="0.01" min="0" oninput="calcPricingR()"></div>
         </div>
+      </div>
+      <div class="field-row">
         <div class="field">
           <label>Pirate Ship</label>
           <div class="price-wrap"><input type="number" id="pr-ship" placeholder="4.50" step="0.01" min="0" oninput="calcPricingR()"></div>
         </div>
-      </div>
-      <div class="field-row">
         <div class="field">
           <label>Packaging</label>
           <div class="price-wrap"><input type="number" id="pr-pack" placeholder="0.40" step="0.01" min="0" oninput="calcPricingR()"></div>
         </div>
+      </div>
+      <div class="field-row">
         <div class="field">
           <label>Buyer ships</label>
           <div class="price-wrap"><input type="number" id="pr-ship-buyer" placeholder="0.00" step="0.01" min="0" oninput="calcPricingR()"></div>
         </div>
+        <div class="field">
+          <label>eBay store</label>
+          <select id="pr-ebay-store" onchange="calcPricingR()">
+            <option value="no">No store (13.25%)</option>
+            <option value="basic">Basic (12.35%)</option>
+            <option value="premium">Premium (11.5%)</option>
+          </select>
+        </div>
       </div>
-      <div class="field">
-        <label>eBay store tier</label>
-        <select id="pr-ebay-store" onchange="calcPricingR()">
-          <option value="no">No store (13.25%)</option>
-          <option value="basic">Basic store (12.35%)</option>
-          <option value="premium">Premium store (11.5%)</option>
-        </select>
-      </div>
-      <div class="section-label" style="margin-top:12px">Required list price</div>
+      <div class="section-label" style="margin-top:4px">Fee breakdown</div>
       <div class="price-results-grid" id="pricing-results-r">
-        <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>
+        <div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter a list price above</div></div>
       </div>
     </div>
 
@@ -958,7 +942,7 @@ let sessionLog = [];
 let currentListingPlatform = 'all';
 let generatedListings = null;
 let savedListingUrls = {};
-let pricingMode = 'profit';
+
 let tmdbSearchTimeout = null;
 
 const TAPES_TABLE = 'tblaB8KaaqrrWu2Te';
@@ -1028,7 +1012,7 @@ function switchRightTab(name, btn){
 // ─────────────────────────────────────────────
 // GLOBAL SCAN (top bar)
 // ─────────────────────────────────────────────
-function handleGlobalScan(){
+async function handleGlobalScan(){
   const input = document.getElementById('global-scan');
   const raw = input.value.trim();
   input.value='';
@@ -1046,14 +1030,67 @@ function handleGlobalScan(){
   if(/^\d{6,14}$/.test(cleaned)){
     // Save UPC to intake field
     document.getElementById('f-upc').value = cleaned;
-    // Open eBay comps
+
+    // Fire eBay comps link in new tab
     const ebayUrl = buildEbayUrl(cleaned);
     window.open(ebayUrl,'_blank');
-    // Show eBay comps in right panel
+
+    // Load comps in right panel
     showBarcodeComps(cleaned);
-    // Switch to TMDB tab so user can search title
+
+    // Check Airtable barcode cache
+    const cached = await lookupBarcodeInAirtable(cleaned);
+    if(cached){
+      // Found in catalogue — load the record
+      const f = cached.fields;
+      const genreMap={'Action':'ACTION','Adventure':'ACTION','Comedy':'COMEDY','Drama':'DRAMA','Horror':'HORROR','Science Fiction':'SCI-FI','Thriller':'THRILLER','Romance':'ROMANCE','Documentary':'DOCUMENTARY','Animation':'ANIMATION','Family':'KIDS/FAMILY','Music':'MUSIC/CONCERT','Western':'WESTERN','Crime':'THRILLER','Mystery':'THRILLER','War':'ACTION','History':'DRAMA','Fantasy':'SCI-FI','Martial Arts':'MARTIAL ARTS','Foreign':'FOREIGN LANGUAGE','Sport':'SPORTS'};
+      currentMovie = {
+        title: f.TITLE||'',
+        year: f.YEAR?String(f.YEAR):'',
+        genre: f.GENRE||'',
+        director: f.DIRECTOR||'',
+        cast: f.CAST||'',
+        synopsis: f.SYNOPSIS||'',
+        overview: f.SYNOPSIS||'',
+        airtableId: cached.id,
+        poster: null,
+        posterSm: null,
+        fromCache: true,
+      };
+      // Fill intake form
+      populateIntakeForm();
+      if(f.CONDITION) document.getElementById('f-condition').value = f.CONDITION;
+      if(f['COST OF GOODS']) document.getElementById('f-cogs').value = f['COST OF GOODS'];
+      if(f['ASKING PRICE']) document.getElementById('f-price').value = f['ASKING PRICE'];
+      if(f['STORAGE LOCATION']) document.getElementById('f-location').value = f['STORAGE LOCATION'];
+      if(f['LABEL / STUDIO']) document.getElementById('f-label').value = f['LABEL / STUDIO'];
+      if(f.NOTES) document.getElementById('f-notes').value = f.NOTES;
+      // Show a "from cache" note in TMDB panel
+      document.getElementById('tmdb-search-state').style.display='none';
+      document.getElementById('tmdb-record').classList.add('visible');
+      document.getElementById('tmdb-record-title').textContent = f.TITLE||'—';
+      document.getElementById('tmdb-record-year').textContent = [f.YEAR,'Already in catalogue'].filter(Boolean).join(' · ');
+      document.getElementById('tmdb-record-genres').innerHTML = f.GENRE?`<span class="tmdb-genre-tag">${f.GENRE}</span>`:'';
+      document.getElementById('tmdb-record-fields').innerHTML = `
+        <div class="tmdb-field"><div class="tmdb-field-label">Director</div><div class="tmdb-field-val">${f.DIRECTOR||'—'}</div></div>
+        <div class="tmdb-field"><div class="tmdb-field-label">Cast</div><div class="tmdb-field-val">${f.CAST||'—'}</div></div>
+        <div class="tmdb-field"><div class="tmdb-field-label">Condition</div><div class="tmdb-field-val">${f.CONDITION||'—'}</div></div>
+        <div class="tmdb-field"><div class="tmdb-field-label">Storage</div><div class="tmdb-field-val">${f['STORAGE LOCATION']||'—'}</div></div>`;
+      document.getElementById('tmdb-record-synopsis').textContent = f.SYNOPSIS||'No synopsis on record.';
+      const img = document.getElementById('tmdb-record-poster');
+      img.style.display='none';
+      const ph = document.getElementById('tmdb-record-poster-ph');
+      ph.textContent = f.TITLE||'';
+      ph.style.display='';
+      // Switch to TMDB tab to show the loaded record
+      switchRightTab('tmdb', document.querySelector('.rtab'));
+      // Sync pricing COGS
+      if(f['COST OF GOODS']) document.getElementById('p-cogs').value = f['COST OF GOODS'];
+      return;
+    }
+
+    // Not in Airtable — switch to TMDB tab for manual title entry
     switchRightTab('tmdb', document.querySelector('.rtab'));
-    // Show intake panel
     switchPanel('intake', document.querySelector('[data-panel="intake"]'));
     document.getElementById('intake-empty').style.display='none';
     document.getElementById('intake-record').style.display='';
@@ -1644,41 +1681,7 @@ function loadListingFromAT(id){
   setTimeout(()=>document.getElementById('listing-status').className='status-msg',3000);
 }
 
-// ── Right panel pricing calculator ──
-let pricingModeR = 'profit';
-
-function setPricingModeR(mode){
-  pricingModeR=mode;
-  document.getElementById('mode-profit-r').classList.toggle('active',mode==='profit');
-  document.getElementById('mode-margin-r').classList.toggle('active',mode==='margin');
-  document.getElementById('field-profit-r').style.display=mode==='profit'?'':'none';
-  document.getElementById('field-margin-r').style.display=mode==='margin'?'':'none';
-  calcPricingR();
-}
-
-function calcPricingR(){
-  const cogs=parseFloat(document.getElementById('pr-cogs').value)||0;
-  const ship=parseFloat(document.getElementById('pr-ship').value)||0;
-  const pack=parseFloat(document.getElementById('pr-pack').value)||0;
-  const shipBuyer=parseFloat(document.getElementById('pr-ship-buyer').value)||0;
-  const store=document.getElementById('pr-ebay-store')?.value||'no';
-  const fixed=cogs+ship+pack;
-
-  if(pricingModeR==='profit'){
-    const targetProfit=parseFloat(document.getElementById('pr-target-profit').value);
-    if(isNaN(targetProfit)){resetPricingResultsR();return;}
-    renderPricingCards(calcPricingResults(targetProfit,null,fixed,shipBuyer,store),'pricing-results-r','cpbr');
-  } else {
-    const targetMargin=parseFloat(document.getElementById('pr-target-margin').value);
-    if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResultsR();return;}
-    renderPricingCards(calcPricingResults(null,targetMargin/100,fixed,shipBuyer,store),'pricing-results-r','cpbr');
-  }
-}
-
-function resetPricingResultsR(){
-  document.getElementById('pricing-results-r').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>`;
-}
-
+// ── Listing result tab switching ──
 function switchListingResultTab(key,btn){
   document.querySelectorAll('#listing-output [id^="lrs-"]').forEach(s=>s.style.display='none');
   document.querySelectorAll('#listing-output .ptab').forEach(b=>b.classList.remove('active'));
@@ -1762,165 +1765,99 @@ function copyFromGen(platform,field,btnId){
 }
 
 // ─────────────────────────────────────────────
-// PRICING CALCULATOR
+// PRICING — FEE CALCULATOR
 // ─────────────────────────────────────────────
-const PRICING_PLATS = {
-  eBay:{name:'eBay',color:'#e53238',
-    solve:(target,fixed,shipBuyer,store)=>{
-      // eBay fee = rate*(price+shipBuyer) + 0.30 (no per-transaction fixed fee for most categories)
-      // revenue = price + shipBuyer
-      // profit = revenue - fee - fixed = target
-      // price + shipBuyer - rate*(price+shipBuyer) - fixed = target
-      // (price+shipBuyer)*(1-rate) = target + fixed
-      // price = (target+fixed)/(1-rate) - shipBuyer
-      const rate={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;
-      return Math.max(0,(target+fixed)/(1-rate)-shipBuyer);
-    },
-    fee:(price,shipBuyer,store)=>{
-      const rate={no:0.1325,basic:0.1235,premium:0.115}[store]||0.1325;
-      return+((price+shipBuyer)*rate).toFixed(2);
-    }
-  },
-  Etsy:{name:'Etsy',color:'#f56400',
-    solve:(target,fixed,shipBuyer)=>{
-      // Etsy: listing fee $0.20 flat, transaction 6.5% of (price+shipBuyer), payment 3%+$0.25
-      // profit = price + shipBuyer - 0.065*(price+shipBuyer) - 0.03*(price+shipBuyer) - 0.25 - 0.20 - fixed = target
-      // (price+shipBuyer)*(1-0.095) = target + fixed + 0.45
-      // price = (target+fixed+0.45)/0.905 - shipBuyer
-      return Math.max(0,(target+fixed+0.45)/0.905-shipBuyer);
-    },
-    fee:(price,shipBuyer)=>{
-      return+((price+shipBuyer)*0.065+(price+shipBuyer)*0.03+0.25+0.20).toFixed(2);
-    }
-  },
-  Facebook:{name:'Facebook',color:'#1877f2',
-    solve:(target,fixed,shipBuyer)=>{
-      // Facebook: 5% of price (min $0.40), no payment processing fee passed to seller
-      // profit = price - 0.05*price - fixed = target (shipBuyer is separate, not subject to fee)
-      // price*0.95 = target + fixed
-      // price = (target+fixed)/0.95
-      return Math.max(0,(target+fixed)/0.95);
-    },
-    fee:(price)=>{
-      return+Math.max(price*0.05,0.40).toFixed(2);
-    }
-  },
-  Mercari:{name:'Mercari',color:'#ea3a74',
-    solve:(target,fixed,shipBuyer)=>{
-      // Mercari: 10% selling fee on price, 2.9%+$0.30 payment processing on (price+shipBuyer)
-      // profit = price + shipBuyer - 0.10*price - 0.029*(price+shipBuyer) - 0.30 - fixed = target
-      // price*(1-0.10-0.029) + shipBuyer*(1-0.029) - 0.30 - fixed = target
-      // price*0.871 = target + fixed + 0.30 - shipBuyer*0.971
-      return Math.max(0,(target+fixed+0.30-shipBuyer*0.971)/0.871);
-    },
-    fee:(price,shipBuyer)=>{
-      return+(price*0.10+(price+shipBuyer)*0.029+0.30).toFixed(2);
-    }
-  },
-};
-
-function setPricingMode(mode){
-  pricingMode=mode;
-  document.getElementById('mode-profit').classList.toggle('active',mode==='profit');
-  document.getElementById('mode-margin').classList.toggle('active',mode==='margin');
-  document.getElementById('field-profit').style.display=mode==='profit'?'':'none';
-  document.getElementById('field-margin').style.display=mode==='margin'?'':'none';
-  calcPricing();
+function calcFees(listPrice, shipBuyer, store){
+  const rev = listPrice + shipBuyer;
+  const rate = {no:0.1325, basic:0.1235, premium:0.115}[store]||0.1325;
+  return {
+    eBay:   +(rev * rate).toFixed(2),
+    Etsy:   +(rev * 0.065 + rev * 0.03 + 0.25 + 0.20).toFixed(2),
+    Facebook: +Math.max(listPrice * 0.05, 0.40).toFixed(2),
+    Mercari: +(listPrice * 0.10 + rev * 0.029 + 0.30).toFixed(2),
+  };
 }
 
-function calcPricingResults(targetProfit, targetMargin, fixed, shipBuyer, store){
-  return Object.entries(PRICING_PLATS).map(([key,plat])=>{
-    let price;
-    if(targetProfit !== null){
-      price = plat.solve(targetProfit, fixed, shipBuyer, store);
-    } else {
-      // Margin mode: solve algebraically per platform
-      // margin = profit/revenue = (revenue - fees - fixed) / revenue = targetMargin
-      // revenue*(1-targetMargin) = fees + fixed
-      // Each platform has different fee structure so we use a simple iterative
-      // approach just for margin mode (converges quickly, 10 iterations max)
-      const m = targetMargin;
-      price = (fixed + 5) / (1 - m); // initial estimate
-      for(let i=0; i<20; i++){
-        const fees = plat.fee(price, shipBuyer, store);
-        const rev = price + shipBuyer;
-        const profit = rev - fees - fixed;
-        const actualMargin = rev > 0 ? profit/rev : 0;
-        const diff = actualMargin - m;
-        if(Math.abs(diff) < 0.00001) break;
-        price += diff * price * 0.5;
-        if(price < 0) price = 0.01;
-      }
-    }
-    const fees = plat.fee(price, shipBuyer, store);
-    const rev = price + shipBuyer;
-    const profit = rev - fees - fixed;
-    const margin = rev > 0 ? (profit/rev)*100 : 0;
-    return {key, plat, price, fees, rev, profit, margin, fixed};
-  });
-}
-
-function renderPricingCards(results, containerId, btnPrefix){
-  const minPrice = Math.min(...results.map(r=>r.price));
+function renderFeeCards(listPrice, cogs, ship, pack, shipBuyer, store, containerId, btnPrefix){
+  const fixed = cogs + ship + pack;
+  const fees = calcFees(listPrice, shipBuyer, store);
+  const plats = [
+    {key:'eBay', name:'eBay', color:'#e53238'},
+    {key:'Etsy', name:'Etsy', color:'#f56400'},
+    {key:'Facebook', name:'Facebook', color:'#1877f2'},
+    {key:'Mercari', name:'Mercari', color:'#ea3a74'},
+  ];
   const container = document.getElementById(containerId);
-  container.innerHTML = results.map(r=>{
-    const isBest = Math.abs(r.price-minPrice)<0.01;
-    const barW = Math.min(100,Math.max(0,r.margin*1.8));
-    const barColor = r.margin>40?'var(--green)':r.margin>25?'var(--yellow)':'var(--red)';
-    return`<div class="price-card${isBest?' best':''}">
-      <div class="pc-plat" style="color:${r.plat.color}">${r.plat.name}${isBest?' · lowest':''}</div>
-      <div class="pc-price">$${r.price.toFixed(2)}</div>
-      <div class="pc-price-label">list price needed</div>
-      <button class="copy-price-btn" id="${btnPrefix}-${r.key}" onclick="copyPriceVal('${r.price.toFixed(2)}','${btnPrefix}-${r.key}')">Copy price</button>
+  container.innerHTML = plats.map(p=>{
+    const fee = fees[p.key];
+    const rev = listPrice + shipBuyer;
+    const profit = rev - fee - fixed;
+    const margin = rev > 0 ? (profit/rev)*100 : 0;
+    const barW = Math.min(100, Math.max(0, margin * 1.8));
+    const barColor = margin > 40 ? 'var(--green)' : margin > 20 ? 'var(--yellow)' : 'var(--red)';
+    return`<div class="price-card">
+      <div class="pc-plat" style="color:${p.color}">${p.name}</div>
+      <div class="pc-price" style="font-size:1.1rem">-$${fee.toFixed(2)}</div>
+      <div class="pc-price-label">platform fee</div>
+      <button class="copy-price-btn" id="${btnPrefix}-${p.key}" onclick="copyPriceVal('${profit.toFixed(2)}','${btnPrefix}-${p.key}')">Copy net $${profit.toFixed(2)}</button>
       <div class="pc-breakdown">
-        Fees<span>-$${r.fees.toFixed(2)}</span><br>
-        Costs<span>-$${r.fixed.toFixed(2)}</span><br>
-        Profit<span style="color:var(--green)">$${r.profit.toFixed(2)}</span><br>
-        Margin<span style="color:var(--lavender)">${r.margin.toFixed(1)}%</span>
+        Fee<span>-$${fee.toFixed(2)}</span><br>
+        Costs<span>-$${fixed.toFixed(2)}</span><br>
+        Net profit<span style="color:${profit>=0?'var(--green)':'var(--red)'}">$${profit.toFixed(2)}</span><br>
+        Margin<span style="color:var(--lavender)">${margin.toFixed(1)}%</span>
       </div>
       <div class="pc-margin-bar"><div class="pc-margin-fill" style="width:${barW}%;background:${barColor}"></div></div>
     </div>`;
   }).join('');
 }
 
-function resetPricingResults(){
-  document.getElementById('pricing-results').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter target and costs above</div></div>`;
+function calcPricing(){
+  const listPrice = parseFloat(document.getElementById('p-list-price').value)||0;
+  if(!listPrice){ resetPricingResults(); return; }
+  const cogs = parseFloat(document.getElementById('p-cogs').value)||0;
+  const ship = parseFloat(document.getElementById('p-ship').value)||0;
+  const pack = parseFloat(document.getElementById('p-pack').value)||0;
+  const shipBuyer = parseFloat(document.getElementById('p-ship-buyer').value)||0;
+  const store = document.getElementById('p-ebay-store')?.value||'no';
+  renderFeeCards(listPrice, cogs, ship, pack, shipBuyer, store, 'pricing-results', 'cpb');
 }
-  const cogs=parseFloat(document.getElementById('p-cogs').value)||0;
-  const ship=parseFloat(document.getElementById('p-ship').value)||0;
-  const pack=parseFloat(document.getElementById('p-pack').value)||0;
-  const shipBuyer=parseFloat(document.getElementById('p-ship-buyer').value)||0;
-  const store=document.getElementById('p-ebay-store')?.value||'no';
-  const fixed=cogs+ship+pack;
 
-  let targetProfit=null;
-  if(pricingMode==='profit'){
-    targetProfit=parseFloat(document.getElementById('p-target-profit').value);
-    if(isNaN(targetProfit)){resetPricingResults();return;}
-  } else {
-    const targetMargin=parseFloat(document.getElementById('p-target-margin').value);
-    if(isNaN(targetMargin)||targetMargin<=0||targetMargin>=100){resetPricingResults();return;}
-    // For margin mode, we'll iterate once using a representative price estimate
-    // Use eBay as reference: price = (fixed+shipBuyer*m)/(1-m-rate) approximately
-    // Simpler: solve for profit that gives the target margin at a guessed price,
-    // then solve algebraically. We'll use the margin definition differently:
-    // margin = profit / revenue; revenue = price + shipBuyer
-    // We solve per platform using their algebraic solve with an estimated profit
-    // derived from fixed costs and margin target
-    const m = targetMargin/100;
-    // Estimate: revenue ≈ fixed/(1-m), profit ≈ revenue*m - shipBuyer*m... approximate
-    // Simpler: just solve price directly per platform for margin target
-    const results = calcPricingResults(null, targetMargin/100, fixed, shipBuyer, store);
-    renderPricingCards(results, 'pricing-results', 'cpb');
-    return;
-  }
-  const results = calcPricingResults(targetProfit, null, fixed, shipBuyer, store);
-  renderPricingCards(results, 'pricing-results', 'cpb');
+function calcPricingR(){
+  const listPrice = parseFloat(document.getElementById('pr-list-price').value)||0;
+  if(!listPrice){ resetPricingResultsR(); return; }
+  const cogs = parseFloat(document.getElementById('pr-cogs').value)||0;
+  const ship = parseFloat(document.getElementById('pr-ship').value)||0;
+  const pack = parseFloat(document.getElementById('pr-pack').value)||0;
+  const shipBuyer = parseFloat(document.getElementById('pr-ship-buyer').value)||0;
+  const store = document.getElementById('pr-ebay-store')?.value||'no';
+  renderFeeCards(listPrice, cogs, ship, pack, shipBuyer, store, 'pricing-results-r', 'cpbr');
 }
 
 function resetPricingResults(){
-  document.getElementById('pricing-results').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);text-align:center;padding:8px">Enter target and costs above</div></div>`;
+  document.getElementById('pricing-results').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter a list price above</div></div>`;
 }
+
+function resetPricingResultsR(){
+  document.getElementById('pricing-results-r').innerHTML=`<div class="price-card" style="grid-column:1/-1"><div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);text-align:center;padding:10px">Enter a list price above</div></div>`;
+}
+
+// ─────────────────────────────────────────────
+// BARCODE CACHE LOOKUP (Airtable TAPES by UPC)
+// ─────────────────────────────────────────────
+async function lookupBarcodeInAirtable(barcode){
+  const token = getCred('at_token');
+  const base = getCred('at_base');
+  if(!token||!base) return null;
+  try{
+    const formula = encodeURIComponent(`{UPC}="${barcode}"`);
+    const url = `https://api.airtable.com/v0/${base.trim()}/${TAPES_TABLE}?filterByFormula=${formula}&maxRecords=1&fields[]=TITLE&fields[]=YEAR&fields[]=GENRE&fields[]=CONDITION&fields[]=DIRECTOR&fields[]=CAST&fields[]=SYNOPSIS&fields[]=SPECIAL+FEATURES&fields[]=LABEL+%2F+STUDIO&fields[]=COST+OF+GOODS&fields[]=ASKING+PRICE&fields[]=STORAGE+LOCATION&fields[]=NOTES&fields[]=UPC`;
+    const res = await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+    const data = await res.json();
+    if(!res.ok||!data.records?.length) return null;
+    return data.records[0];
+  }catch(e){ return null; }
+}
+const PRICING_PLATS = {}; // kept for compatibility, not used by fee calculator
 
 function copyPriceVal(price,btnId){
   navigator.clipboard.writeText(price).then(()=>{

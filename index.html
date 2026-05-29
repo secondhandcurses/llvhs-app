@@ -913,20 +913,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
     </div>
 
-    <div class="settings-section">
-      <div class="settings-section-title">eBay Developer (pending approval)</div>
-      <div class="sfield">
-        <label>Client ID (App ID)</label>
-        <input type="password" id="s-ebay-client-id" placeholder="Pending approval">
-        <div class="sfield-hint">developer.ebay.com → Application Keys → App ID</div>
-      </div>
-      <div class="sfield">
-        <label>Client Secret (Cert ID)</label>
-        <input type="password" id="s-ebay-client-secret" placeholder="Pending approval">
-        <div class="sfield-hint">developer.ebay.com → Application Keys → Cert ID</div>
-      </div>
-    </div>
-
     <button class="settings-save-btn" onclick="saveSettings()">Save all credentials</button>
     <div class="settings-saved" id="settings-saved">✓ All credentials saved to this device</div>
 
@@ -962,8 +948,6 @@ function saveSettings(){
   setCred('tmdb', document.getElementById('s-tmdb').value.trim());
   setCred('at_token', document.getElementById('s-at-token').value.trim());
   setCred('at_base', document.getElementById('s-at-base').value.trim());
-  setCred('ebay_id', document.getElementById('s-ebay-client-id').value.trim());
-  setCred('ebay_secret', document.getElementById('s-ebay-client-secret').value.trim());
   document.getElementById('settings-saved').classList.add('visible');
   setTimeout(()=>document.getElementById('settings-saved').classList.remove('visible'),3000);
   updateCredStatus();
@@ -974,8 +958,6 @@ function loadSettingsFields(){
   document.getElementById('s-tmdb').value = getCred('tmdb');
   document.getElementById('s-at-token').value = getCred('at_token');
   document.getElementById('s-at-base').value = getCred('at_base');
-  document.getElementById('s-ebay-client-id').value = getCred('ebay_id');
-  document.getElementById('s-ebay-client-secret').value = getCred('ebay_secret');
 }
 
 function updateCredStatus(){
@@ -1110,93 +1092,30 @@ function buildEbayUrl(query){
 }
 
 // ─────────────────────────────────────────────
-// EBAY API — TOKEN + COMPS
+// COMPS — eBay link launcher
 // ─────────────────────────────────────────────
-let ebayToken = null;
-let ebayTokenExpiry = 0;
 let currentCompsQuery = null;
 
-async function getEbayToken(){
-  const clientId = getCred('ebay_id');
-  const clientSecret = getCred('ebay_secret');
-  if(!clientId || !clientSecret) return null;
-  if(ebayToken && Date.now() < ebayTokenExpiry - 300000) return ebayToken;
-  try{
-    const credentials = btoa(`${clientId}:${clientSecret}`);
-    const res = await fetch('https://api.ebay.com/identity/v1/oauth2/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/x-www-form-urlencoded','Authorization':`Basic ${credentials}`},
-      body:'grant_type=client_credentials&scope=https%3A%2F%2Fapi.ebay.com%2Foauth%2Fapi_scope'
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error_description||`Token error ${res.status}`);
-    ebayToken = data.access_token;
-    ebayTokenExpiry = Date.now() + (data.expires_in * 1000);
-    return ebayToken;
-  }catch(e){ console.error('eBay token error:',e); return null; }
-}
-
-async function loadComps(query, isBarcode=false, displayTitle=''){
+function loadComps(query, isBarcode=false, displayTitle=''){
   currentCompsQuery = {query, isBarcode, displayTitle};
+  const soldUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(isBarcode?query:query+' VHS')}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  const activeUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(isBarcode?query:query+' VHS')}&_sop=15`;
   document.getElementById('comps-empty').style.display='none';
   document.getElementById('comps-content').style.display='';
-  document.getElementById('comps-title').textContent = `eBay sold · ${displayTitle||query}`;
-  const ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(isBarcode?query:query+' VHS')}&LH_Sold=1&LH_Complete=1&_sop=13`;
-  document.getElementById('comps-ebay-link').href = ebayUrl;
-  document.getElementById('comp-summary').innerHTML = `<div class="comp-card" style="grid-column:1/-1"><div class="cc-label">Loading</div><div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);margin-top:4px"><span class="spinner">◌</span> Fetching eBay data…</div></div>`;
+  document.getElementById('comps-title').textContent = displayTitle||query;
+  document.getElementById('comp-summary').innerHTML = `
+    <div class="comp-card" style="grid-column:1/-1;padding:12px 10px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="${soldUrl}" target="_blank" rel="noopener" class="btn btn-grape btn-full" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">↗ eBay Sold Comps</a>
+        <a href="${activeUrl}" target="_blank" rel="noopener" class="btn btn-full" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">↗ Active Listings</a>
+      </div>
+    </div>`;
   document.getElementById('comp-rows').innerHTML='';
-
-  const token = await getEbayToken();
-  if(!token){
-    document.getElementById('comp-summary').innerHTML=`<div class="comp-card" style="grid-column:1/-1"><div class="cc-label">No eBay credentials</div><div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);margin-top:4px">Add eBay Client ID and Secret in Settings</div></div>`;
-    return;
-  }
-
-  try{
-    const q = encodeURIComponent(isBarcode ? query : `${query} VHS`);
-    const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=buyingOptions%3A%7BFIXED_PRICE%7D&sort=endTime&limit=20`;
-    const res = await fetch(url,{headers:{'Authorization':`Bearer ${token}`,'X-EBAY-C-MARKETPLACE-ID':'EBAY_US','X-EBAY-C-ENDUSERCTX':'contextualLocation=country%3DUS'}});
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.errors?.[0]?.message||`eBay error ${res.status}`);
-    const items = data.itemSummaries||[];
-    if(!items.length){
-      document.getElementById('comp-summary').innerHTML=`<div class="comp-card" style="grid-column:1/-1"><div class="cc-label">No results</div><div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);margin-top:4px">No recent eBay listings found — try the full eBay search below</div></div>`;
-      return;
-    }
-    const prices = items.map(i=>parseFloat(i.price?.value||0)).filter(p=>p>0);
-    const avg = prices.length ? prices.reduce((a,b)=>a+b,0)/prices.length : 0;
-    const min = prices.length ? Math.min(...prices) : 0;
-    const max = prices.length ? Math.max(...prices) : 0;
-    document.getElementById('comp-summary').innerHTML=`
-      <div class="comp-card"><div class="cc-label">Avg price</div><div class="cc-val grape">$${avg.toFixed(0)}</div></div>
-      <div class="comp-card"><div class="cc-label">Range</div><div class="cc-val" style="font-size:0.85rem">$${min.toFixed(0)}–$${max.toFixed(0)}</div></div>
-      <div class="comp-card"><div class="cc-label">Results</div><div class="cc-val">${items.length}</div></div>`;
-    document.getElementById('comp-rows').innerHTML = items.slice(0,12).map(item=>{
-      const price = parseFloat(item.price?.value||0);
-      const title = item.title||'—';
-      const short = title.length>50 ? title.slice(0,50)+'…' : title;
-      const condition = item.condition||'';
-      return`<div class="comp-row">
-        <div style="flex:1">
-          <div style="font-family:var(--mono);font-size:0.6rem;color:var(--text);line-height:1.4">${short}</div>
-          ${condition?`<div style="font-family:var(--mono);font-size:0.54rem;color:var(--muted)">${condition}</div>`:''}
-        </div>
-        <span class="comp-price" style="margin-left:8px;flex-shrink:0;font-family:var(--display);font-size:0.88rem">$${price.toFixed(2)}</span>
-      </div>`;
-    }).join('');
-  }catch(e){
-    document.getElementById('comp-summary').innerHTML=`<div class="comp-card" style="grid-column:1/-1"><div class="cc-label" style="color:var(--red)">Error</div><div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);margin-top:4px">${e.message}</div></div>`;
-  }
+  document.getElementById('comps-ebay-link').style.display='none';
 }
 
-async function refreshComps(){
-  if(!currentCompsQuery) return;
-  await loadComps(currentCompsQuery.query, currentCompsQuery.isBarcode, currentCompsQuery.displayTitle);
-}
-
-function showBarcodeComps(barcode){
-  loadComps(barcode, true, `Barcode ${barcode}`);
-}
+function refreshComps(){ if(currentCompsQuery) loadComps(currentCompsQuery.query, currentCompsQuery.isBarcode, currentCompsQuery.displayTitle); }
+function showBarcodeComps(barcode){ loadComps(barcode, true, `Barcode ${barcode}`); }
 
 // ─────────────────────────────────────────────
 // TMDB SEARCH
